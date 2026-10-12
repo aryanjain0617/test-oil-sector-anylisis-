@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trading Framework Documents</title>
+<style>
+:root{--bg:#f3f4f6;--c:#fff;--t:#1b2430;--m:#5b6676;--a:#0f4c81;--l:#d5dae1;--h:#e8eef5}
+@media(prefers-color-scheme:dark){:root{--bg:#12161c;--c:#1a2029;--t:#e6eaf0;--m:#9aa5b4;--a:#6fb1ec;--l:#323b48;--h:#222b37}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+nav{position:sticky;top:0;z-index:9;display:flex;gap:2px;overflow-x:auto;background:var(--c);border-bottom:2px solid var(--l);padding:6px 8px 0}
+nav button{flex:none;border:0;background:none;color:var(--m);font:600 13px inherit;padding:10px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+nav button:hover{color:var(--t)}nav button:focus-visible{outline:2px solid var(--a)}nav button.on{color:var(--a);border-color:var(--a)}
+main{max-width:1100px;margin:0 auto;padding:18px 14px 60px}.doc{display:none}.doc.on{display:block}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:18px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--a)}h3{font-size:15px;margin:18px 0 6px;color:var(--a)}
+.sub{color:var(--m);margin:0 0 12px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.chips div{background:var(--c);border:1px solid var(--l);padding:6px 12px;border-radius:4px}.chips b{display:block;font-size:11px;color:var(--m)}
+.tw{overflow-x:auto;margin:8px 0}table{border-collapse:collapse;width:100%;background:var(--c)}th,td{border:1px solid var(--l);padding:6px 8px;text-align:left;vertical-align:top}th{background:var(--h)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin:8px 0}.b{background:var(--c);border:1px solid var(--l);border-left:4px solid var(--a);padding:10px 12px;border-radius:3px}.b h4{margin:0 0 4px;font-size:14px}.b p{margin:3px 0}
+.note{font-size:12px;color:var(--m);margin:6px 0}pre{background:var(--c);border:1px solid var(--l);padding:10px;overflow-x:auto;font-size:12px}
+ul{margin:4px 0;padding-left:20px}.blank{height:300px;border:1px dashed var(--l);background:var(--c);padding:14px}
+code{font-family:ui-monospace,Consolas,monospace;font-size:12px;background:var(--h);padding:0 3px;border-radius:2px}pre{font-size:11.5px;line-height:1.35}</style></head><body>
+<nav id="nav" role="tablist"></nav>
+<main>
+
+<!-- 1 -->
+<section class="doc" data-t="5 Ws Framework: Oil Report">
+<h1>THE 5 Ws TRADING FRAMEWORK REPORT</h1><p class="sub"><b>OIL &amp; ENERGY VALUE CHAIN EDITION</b><br>A Comprehensive Quantitative Specification for Equity Futures, Synthetic Futures, Options &amp; Crude-Driven Pair Trade Execution</p>
+<div class="chips"><div><b>TIMEFRAME</b>1-Hour (1h) Charts</div><div><b>EXECUTION MODE</b>NRML (Overnight)</div><div><b>EXPIRY CYCLE</b>Next Month Expiry</div><div><b>TARGET UNIVERSE</b>NFO Oil, Aviation &amp; Paints</div></div>
+<h2>W — WHO: Operators, Systems &amp; Asset Classes</h2><p class="sub">Target operator profile, instrument scope and the crude-sensitive watchlist</p>
+<div class="g"><div class="b"><h4>System &amp; Trader Profile</h4><p><b>Target Audience:</b> Systematic algo traders and mechanical derivatives operators who need zero-discretionary rules.</p><p><b>Execution Platform:</b> Streak / broker REST APIs with automated order routing and multi-leg synchronization.</p><p><b>Signal Feed:</b> Brent / MCX Crude 1h chart used as a regime filter (signal only, not traded unless the operator chooses).</p></div>
+<div class="b"><h4>Instrument Scope</h4><p><b>Equity Futures:</b> Next-month stock futures across the oil value chain.</p><p><b>ATM Options:</b> Call (CE) and Put (PE) contracts, next-month expiry.</p><p><b>Hedge Leg:</b> Nifty futures for beta neutrality on pair trades.</p><p><b>Pair Trades:</b> Upstream vs Downstream / Aviation / Paints spreads.</p></div></div>
+<h3>Crude-Sensitive Watchlist (from the Oil Sectoral Dynamics study)</h3>
+<div class="tw"><table><tr><th>Sector</th><th>Key Stocks</th><th>Oil Sensitivity</th><th>Crude SURGE Bias</th><th>Crude SLUMP Bias</th><th>Primary Operational Driver</th></tr>
+<tr><td>Upstream (E&amp;P)</td><td>ONGC, OIL India, Reliance (E&amp;P exposure)</td><td>+0.75 High Positive</td><td>Bullish: higher realization expands EBITDA</td><td>Bearish: revenue drops, fixed extraction cost flat</td><td>Crude realization ($/bbl), gas tariffs</td></tr>
+<tr><td>Downstream (Refining / OMC)</td><td>IOCL, BPCL, HPCL</td><td>-0.65 High Negative</td><td>Bearish: GRMs lag, retail price caps block pass-through</td><td>Bullish: lower input cost, wider marketing margins</td><td>GRMs ($/bbl), marketing margins</td></tr>
+<tr><td>Aviation</td><td>InterGlobe Aviation (IndiGo), SpiceJet</td><td>-0.82 Inverse Beta</td><td>Bearish: ATF is 40%+ of opex; fare hikes hit load factors</td><td>Bullish: instant opex relief, rapid profit expansion</td><td>ATF price, passenger yield (PRASK)</td></tr>
+<tr><td>Paints</td><td>Asian Paints, Berger, Kansai Nerolac</td><td>-0.58 Inverse Beta</td><td>Bearish: monomer / solvent inflation, 200-400 bps GM erosion</td><td>Bullish: gross margin expansion, price stability</td><td>Monomer / solvent cost, gross margin %</td></tr></table></div>
+<p class="note">Note: Reliance is an integrated name (refining, retail, telecom), so its crude sensitivity is diluted versus pure E&amp;P names; treat it as a secondary upstream proxy. Futures and options eligibility and lot sizes for every name (especially OIL India, Berger, Nerolac and SpiceJet) must be confirmed on the current NSE F&amp;O list before deployment.</p>
+<h2>W — WHAT: Mechanical Rulesets &amp; Payoff Structures</h2><p class="sub">Crude regime gate, directional futures, synthetic futures and crude-divergence pair trades</p>
+<h3>Step 0: Crude Regime Gate (builds the watchlist; does not trigger trades)</h3>
+<div class="tw"><table><tr><th>Crude Regime (Brent / MCX Crude, 1h)</th><th>Condition</th><th>Upstream (ONGC, OIL)</th><th>Downstream, Aviation, Paints</th></tr>
+<tr><td>Crude Bull</td><td>Crude close above Supertrend (100, 1.65)</td><td>LONG-eligible only</td><td>SHORT-eligible only</td></tr>
+<tr><td>Crude Bear</td><td>Crude close below Supertrend (100, 1.65)</td><td>SHORT-eligible only</td><td>LONG-eligible only</td></tr></table></div>
+<p><b>Principle:</b> fundamentals (crude) create the watchlist; RSI and Supertrend on the stock chart provide 100% of the execution triggers. A stock signal that disagrees with the crude regime is skipped.</p>
+<h3>Strategy 1: Direct Equity Futures (1-Hour Timeframe), Single Leg</h3>
+<div class="tw"><table><tr><th>Trade Side</th><th>Primary Trigger (AND Logic)</th><th>Execution Action</th><th>Exit Criteria</th></tr>
+<tr><td>Bullish Long</td><td>RSI (14) &gt; 60 AND Close crosses above Supertrend (100, 1.65) AND Crude Gate aligned</td><td>BUY Next Month Futures (NRML)</td><td>Close crosses below Supertrend (100, 1.65) OR Calendar Hard Exit</td></tr>
+<tr><td>Bearish Short</td><td>RSI (14) &lt; 40 AND Close crosses below Supertrend (100, 1.65) AND Crude Gate aligned</td><td>SELL Next Month Futures (NRML)</td><td>Close crosses above Supertrend (100, 1.65) OR Calendar Hard Exit</td></tr></table></div>
+<h3>Strategy 2: Synthetic Multi-Leg Options, Dual Leg Replicator</h3>
+<div class="tw"><table><tr><th>Strategy Mode</th><th>Leg Configuration</th><th>Strike &amp; Expiry</th><th>Entry Condition</th><th>Exit Trigger</th></tr>
+<tr><td>Synthetic Long Future</td><td>Leg 1: BUY Call (CE)<br>Leg 2: SELL Put (PE)</td><td>ATM Strike (Next Month Expiry)</td><td>RSI &gt; 60 AND Close &gt; ST (100, 1.65) AND Crude Gate aligned</td><td>Close &lt; ST (100, 1.65) OR Date 30th-1st</td></tr>
+<tr><td>Synthetic Short Future</td><td>Leg 1: BUY Put (PE)<br>Leg 2: SELL Call (CE)</td><td>ATM Strike (Next Month Expiry)</td><td>RSI &lt; 40 AND Close &lt; ST (100, 1.65) AND Crude Gate aligned</td><td>Close &gt; ST (100, 1.65) OR Date 30th-1st</td></tr></table></div>
+<div class="b"><h4>Execution Mandate</h4><p>Synthetic multi-leg positions require concurrent execution to prevent leg risk. Standard order types must enforce overnight NRML routing; intraday (MIS) orders are strictly forbidden.</p></div>
+<h3>Strategy 3: Crude-Divergence Pair Trades (Mean Reversion)</h3>
+<p><b>Spread (t) = Price[Upstream] - β x Price[Downstream / Aviation / Paints] | Z-Score (t) = [Spread (t) - μ(60d)] / σ(60d) | Long Spread when Z &lt; -2.0, Short Spread when Z &gt; +2.0</b></p>
+<div class="tw"><table><tr><th>Pair Play</th><th>Pair Construction</th><th>Entry Trigger</th><th>Trade Direction</th><th>Exit Criteria</th></tr>
+<tr><td>1. Upstream vs Downstream</td><td>ONGC vs BPCL (extend to IOCL / HPCL)</td><td>|Z| exceeds 2.2 on ONGC / BPCL (2.0 base rule on other pairs)</td><td>Z &gt; +2: Short Upstream / Long Downstream<br>Z &lt; -2: Long Upstream / Short Downstream</td><td>Z returns to -0.5 to +0.5 OR 15 trading days</td></tr>
+<tr><td>2. Upstream vs Aviation / Paints</td><td>ONGC vs IndiGo or Asian Paints (β-weighted ratio)</td><td>Z beyond +/-2.0, or price ratio at historical extreme (e.g. OPEC+ cut pushes crude above $90)</td><td>Same spread logic as Play 1</td><td>Z returns to -0.5 to +0.5 OR 15 trading days</td></tr></table></div>
+<div class="g"><div class="b"><h4>Beta Neutrality</h4><p>Match cash values or delta exposures (e.g. 1 lot ONGC futures vs delta-adjusted BPCL / IndiGo futures or puts) to isolate crude-driven alpha from market swings. Nifty futures can fine-tune residual beta.</p></div>
+<div class="b"><h4>Options Hedging (VIX &gt; 20)</h4><p>Replace naked futures with a Bull Put Spread on the undervalued (long) leg and a Bear Call Spread on the overvalued (short) leg to eliminate unlimited gap risk.</p></div>
+<div class="b"><h4>Suggested Safeguards*</h4><p>Hard exit if |Z| widens beyond 3.5 (trend, not reversion). Do not hold Strategy 1 and Strategy 3 in the same underlying in opposite directions.</p></div></div>
+<p class="note">*Safeguards marked with an asterisk are design additions to the source study and should be validated in backtesting.</p>
+<h2>W — WHAT (cont.): Options Strategy Selector &amp; IVP Matrix</h2><p class="sub">Volatility regime decides whether to sell expensive premium or buy discounted convexity</p>
+<div class="tw"><table><tr><th>Volatility Regime</th><th>Market Direction</th><th>Primary Technical Trigger</th><th>Selected Options Strategy</th><th>Edge Source</th></tr>
+<tr><td rowspan="2">High Volatility (IVP &gt; 50)<br>Options Expensive</td><td>Bullish</td><td>RSI (14) &gt; 60 + Supertrend Green</td><td>SELL ATM Put / Bull Put Credit Spread</td><td>Vega Collapse + Theta Decay + Delta</td></tr>
+<tr><td>Bearish</td><td>RSI (14) &lt; 40 + Supertrend Red</td><td>SELL ATM Call / Bear Call Credit Spread</td><td>Vega Collapse + Theta Decay + Delta</td></tr>
+<tr><td rowspan="2">Low Volatility (IVP &lt; 50)<br>Options Discounted</td><td>Bullish</td><td>RSI &gt; 60 + Triple ST Green (10,1 / 11,2 / 12,3)</td><td>BUY ATM Call / Bull Call Debit Spread</td><td>Gamma Acceleration + Convexity</td></tr>
+<tr><td>Bearish</td><td>RSI &lt; 40 + Triple ST Red (10,1 / 11,2 / 12,3)</td><td>BUY ATM Put / Bear Put Debit Spread</td><td>Gamma Acceleration + Convexity</td></tr></table></div>
+<div class="g"><div class="b"><h4>How IVP is read in oil names</h4><p>Use the IV Percentile of each stock's own next-month ATM implied volatility. Crude spikes lift IV in ONGC / OIL and compress it in the inverse sectors only when the move is a surprise, so always read IVP fresh on the day of entry.</p></div>
+<div class="b"><h4>Direction mapping</h4><p>The Bullish / Bearish columns refer to the stock signal that already passed the Crude Gate. Example: crude bear regime + IndiGo RSI &gt; 60 and Supertrend green is a bullish IndiGo setup.</p></div>
+<div class="b"><h4>Strategy 2 vs Selector</h4><p>Use Synthetic Futures when directional conviction is high and IV is neutral. Use the IVP matrix when the edge is specifically in volatility (expensive vs discounted premium).</p></div></div>
+<h2>W — WHEN: Execution Calendar &amp; Time Windows</h2><p class="sub">Monthly crude-catalyst cycle, weekly inventory rhythm and the quarterly earnings playbook</p>
+<div class="g"><div class="b"><h4>1-19 STANDBY PHASE</h4><p>No entry. Monitor crude regime, mid-month OPEC / IEA outlooks and refresh the watchlist.</p></div><div class="b"><h4>20-24 PRIMARY ENTRY WINDOW</h4><p>Check IVP. Crude Gate + RSI + ST cross trigger.</p></div><div class="b"><h4>25-29 HOLD &amp; TRAIL</h4><p>Exit on ST reversal. Trail on the stock chart.</p></div><div class="b"><h4>30-1 MANDATORY HARD EXIT</h4><p>Square-off all legs around the ATF revision / OPEC+ headlines.</p></div></div>
+<div class="g"><div class="b"><h4>Monthly Oil Catalyst: 20th-25th Window</h4><p><b>Context:</b> Public-sector OMCs revise ATF prices on the 1st of every month, and OPEC+ production decisions typically land in the first days of the month. This creates a predictable event cycle for crude-linked stocks, especially aviation and upstream.</p><p><b>Execution:</b> Check IVP on the 20th-25th. Enter via Crude Gate + RSI + ST. On the 30th begin scaling out; on the 1st, exit 70%-80% of the position immediately after the release to harvest IV crush, and square off the balance before the close.</p></div>
+<div class="b"><h4>Weekly Oil Rhythm (overlay)*</h4><p><b>Tuesday night:</b> API inventory estimate.</p><p><b>Wednesday evening (IST):</b> EIA weekly inventory release, after Indian market close, so NRML holders absorb it as an opening gap on Thursday.</p><p><b>Mid-month:</b> OPEC and IEA monthly oil market reports fall inside the Standby Phase: use them to re-evaluate the Crude Gate, not to enter.</p><p>Suggested rule: on Wednesdays, hold naked short-option legs at reduced size, or convert to spreads.</p></div>
+<div class="b"><h4>Quarterly Earnings Playbook (Earnings Season)</h4><p><b>Pre-Runup (7-10 Days Prior):</b> Buy options on rising IVP; exit 1 day prior to results. Focus on names where the quarter hinges on GRMs, marketing margins or crude realization.</p><p><b>Pre-Result (1-2 Days Prior):</b> Sell defined-risk credit spreads ONLY when IVP &gt; 70 to cap binary gap risk. No naked selling into results.</p><p><b>What the Market Watches:</b> OMCs: GRMs, marketing margins, under-recoveries. ONGC / OIL: realization per barrel, gas tariffs. IndiGo: ATF cost, yields. Paints: gross margin % vs raw material.</p></div></div>
+<p class="note">*The weekly overlay and Wednesday sizing rule are design additions to the source study; validate in backtesting. Confirm exact OPEC+, EIA and results dates from official calendars each month.</p>
+<h2>W — WHERE: Execution Environment &amp; Architecture</h2><p class="sub">Order routing, expiry handshake, execution engine and data layer</p>
+<div class="g"><div class="b"><h4>Order Routing</h4><p><b>NRML Overnight:</b> Enforced across all futures and option legs to support multiday trend holding. MIS is blocked at the order-router level.</p></div>
+<div class="b"><h4>Expiry Handshake</h4><p><b>Next Month Contracts:</b> Avoid the extreme theta and gamma of current-expiry options. Before each entry, check OI and bid-ask on the next-month contract, since liquidity can be thinner than near-month in some names.</p></div>
+<div class="b"><h4>Execution Engine</h4><p><b>Streak / REST API:</b> Zero execution delay between multi-leg synchronized fills. Place the BUY leg first to secure hedge margin benefit, then the SELL leg inside the same basket.</p></div>
+<div class="b"><h4>Leg-Failure Protocol*</h4><p>If any leg of a synthetic or pair trade fails to fill within the sync window, auto-flatten the filled leg at market and alert the operator.</p></div>
+<div class="b"><h4>Data Layer*</h4><p>1h OHLC for stocks and Brent / MCX Crude; stock-level IV and IVP; India VIX; 60-day close series for β and Z-score updates.</p></div>
+<div class="b"><h4>Margin &amp; Sizing*</h4><p>Size pair legs by cash value or delta (beta-neutral). Keep spread margin headroom for VIX &gt; 20 regimes.</p></div></div>
+<p class="note">*Operational suggestions to complement the source study.</p>
+<h2>W — WHY: Fundamental Rationale &amp; Risk Mathematics</h2><p class="sub">Why crude drives these sectors and how underlying risk converts into option stop losses</p>
+<h3>Value Chain Transmission</h3>
+<div class="tw"><table><tr><th>Crude Oil (Brent)</th><th>Upstream (E&amp;P)</th><th>Downstream (Refining / OMC)</th><th>Aviation</th><th>Paints &amp; Coatings</th></tr>
+<tr><td>Primary input benchmark</td><td>Direct realization (+ correlation)</td><td>GRM and margin squeeze (- correlation)</td><td>ATF ~40% of opex (- correlation)</td><td>Monomers / solvents ~30-35% of cost (- correlation)</td></tr></table></div>
+<div class="tw"><table><tr><th>Scenario</th><th>Upstream</th><th>Downstream</th><th>Aviation</th><th>Paints</th></tr>
+<tr><td>A: Crude Surges</td><td>Direct beneficiary; EBITDA expands</td><td>Squeezed; GRMs lag, price caps block pass-through</td><td>Margin contraction; fare hikes hit load factors</td><td>Input inflation; 200-400 bps gross margin erosion</td></tr>
+<tr><td>B: Crude Slumps</td><td>Cash flow contraction; fixed costs stay flat</td><td>Margin expansion; steady pump prices</td><td>Significant tailwind; opex drops instantly</td><td>Gross margin expansion; price stability</td></tr></table></div>
+<div class="b"><h4>Monthly Event Edge</h4><p><b>Pre-event volatility expansion (20th-25th):</b> IV tends to build as participants price in the month-start ATF revision and OPEC+ decisions.</p><p><b>Post-event IV crush (1st):</b> once the data and decisions are public, uncertainty collapses and option premiums decay quickly, allowing premium harvesting. Crude-driven pair spreads add a second edge: temporary sector mispricings tend to mean-revert.</p></div>
+<h3>Greek-Based Option Stop Loss Calculation (Delta Translation)</h3>
+<p>Technical stop losses sit on the underlying chart via Supertrend. Delta converts that underlying risk into an exact option exit price.</p>
+<pre>Underlying Risk = | Current Stock Price - Supertrend Price |
+Option Contract Risk = Underlying Risk x Option Delta
+Option Stop Loss Price = Entry Option Premium +/- Option Risk (+ for sold options, - for bought options)</pre>
+<h3>Practical Trade Risk Examples (hypothetical prices for illustration only)</h3>
+<div class="tw"><table><tr><th>Parameter</th><th>Ex. 1: SELL ATM Put (Bullish, High IVP)</th><th>Ex. 2: BUY ATM Call (Bullish, Low IVP)</th></tr>
+<tr><td>Underlying (e.g. upstream stock)</td><td>Spot / Fut = ₹260.00</td><td>Spot / Fut = ₹260.00</td></tr>
+<tr><td>Supertrend level (stop loss)</td><td>₹252.00 (green line support)</td><td>₹252.00 (green line support)</td></tr>
+<tr><td>Underlying risk</td><td>₹8.00 per share</td><td>₹8.00 per share</td></tr>
+<tr><td>Option delta (ATM)</td><td>0.50</td><td>0.50</td></tr>
+<tr><td>Option risk</td><td>₹8.00 x 0.50 = ₹4.00</td><td>₹8.00 x 0.50 = ₹4.00</td></tr>
+<tr><td>Entry premium</td><td>₹9.00 (ATM Put sold)</td><td>₹9.00 (ATM Call bought)</td></tr>
+<tr><td>Final execution rule</td><td>Exit underlying at ₹252.00; exit option if put premium reaches ₹13.00</td><td>Exit underlying at ₹252.00; exit option if call premium falls to ₹5.00</td></tr></table></div>
+<p class="note">Delta drifts as price moves toward the stop (gamma), so the translated premium is an approximation: re-compute delta at entry from live Greeks, and add the buffer below on binary events.</p>
+<h3>Core Risk Management Rules</h3>
+<div class="tw"><table><tr><th>#</th><th>Rule</th><th>Specification</th></tr>
+<tr><td>1</td><td>No Indicator, No Trade</td><td>Crude and sector fundamentals create the watchlist; RSI and Supertrend provide 100% of the technical execution triggers (Z-score for pair trades).</td></tr>
+<tr><td>2</td><td>Crude Gate Alignment*</td><td>Stock signals that conflict with the Brent / MCX Crude 1h Supertrend regime are skipped.</td></tr>
+<tr><td>3</td><td>Naked Selling Restrictions</td><td>Naked ATM option selling is permitted ONLY during the monthly oil catalyst window (moderate gap risk). On quarterly earnings (high binary gap risk), credit spreads are mandatory.</td></tr>
+<tr><td>4</td><td>Vega / Gamma Buffer</td><td>Add a 5%-10% premium buffer to calculated stop losses on binary earnings to absorb slippage.</td></tr>
+<tr><td>5</td><td>Pair Trade Risk</td><td>Beta-neutral sizing; defined-risk spreads when VIX &gt; 20; exit at Z in [-0.5, +0.5] or after 15 trading days; extreme-Z stop at |Z| &gt; 3.5*.</td></tr>
+<tr><td>6</td><td>Overnight Gap Awareness*</td><td>Crude trades while Indian markets are shut. Stops on NRML positions cannot protect against opening gaps; size accordingly and prefer spreads on event nights.</td></tr>
+<tr><td>7</td><td>No MIS</td><td>Intraday product type is forbidden on every leg of every strategy.</td></tr></table></div>
+<h3>Master Quick-Reference: Crude Condition to Action</h3>
+<div class="tw"><table><tr><th>Crude Condition</th><th>Upstream</th><th>Downstream / Aviation / Paints</th><th>Pair Trade Direction (Z-score extreme)</th></tr>
+<tr><td>Crude spikes above 2σ upper band</td><td>Short (overbought top)</td><td>Long (oversold bottom)</td><td>Short Upstream / Long Downstream-Paints</td></tr>
+<tr><td>Crude plunges below 2σ lower band</td><td>Long (oversold bottom)</td><td>Short (overbought top)</td><td>Long Upstream / Short Downstream-Paints</td></tr></table></div>
+<p class="note">This matrix is the mean-reversion view used by Strategy 3. Strategies 1 and 2 are trend-following and follow the Crude Gate instead. Decide which regime applies via the Z-score and Supertrend state before acting.</p>
+<h3>Before Going Live: Validation Checklist</h3>
+<p>1) Backtest the 1h RSI (14) + Supertrend (100, 1.65) triggers and the Crude Gate on every name, net of costs and slippage. 2) Confirm next-month liquidity (OI, bid-ask) for each future and ATM option. 3) Verify NSE F&amp;O eligibility, lot sizes and expiry dates. 4) Paper-trade the multi-leg order sync and leg-failure protocol. 5) Items marked with an asterisk (*) are additions beyond the source studies and need independent validation. This document is a research framework, not investment advice; trading derivatives carries substantial risk of loss.</p>
+</section>
+
+<!-- 2 -->
+<section class="doc" data-t="Curriculum Vitae">
+<h1>PROFESSIONAL CURRICULUM VITAE</h1><p class="sub"><b>QUANTITATIVE TRADING SYSTEMS &amp; DERIVATIVES EXECUTION SPECIALIST</b></p>
+<div class="chips"><div><b>EDUCATIONAL QUALIFICATION</b>9th Pass</div><div><b>CORE HOBBIES &amp; ENDURANCE</b>Cycling &amp; Swimming</div><div><b>PRIMARY EXPERTISE</b>Systematic Equity Futures &amp; Options</div></div>
+<h2>PROFESSIONAL EXECUTIVE SUMMARY</h2>
+<p>Disciplined, rules-based Derivatives Trading Operator with extensive specialization in non-discretionary quantitative systems. Adept at developing, backtesting, and executing multi-leg option combinations, calendar-driven event catalyst strategies, and multi-timeframe indicator models. Leverages high physical endurance and laser-focused mental discipline cultivated through long-distance cycling and competitive swimming to execute strict risk management protocols and automated trading operations.</p>
+<h2>CORE TECHNICAL &amp; STRATEGY SKILLSET</h2>
+<div class="g"><div class="b"><h4>1. Technical Systems &amp; Indicators</h4><p><b>Momentum Drivers:</b> RSI (14-period, 60/40 breakout thresholds).</p><p><b>Trend Capture:</b> Supertrend Primary (100-period, 1.65 multiplier).</p><p><b>Confirmation Engines:</b> Triple Supertrend combinations (10,1 / 11,2 / 12,3).</p><p><b>Execution Standard:</b> 1-Hour (1h) completed candle triggers.</p></div>
+<div class="b"><h4>2. Multi-Leg Derivatives Execution</h4><p><b>Futures Instruments:</b> Single-leg NFO Equity Futures (NRML Mode).</p><p><b>Synthetic Multi-Legs:</b> Synthetic Long &amp; Short Futures via ATM options.</p><p><b>Credit Spreads:</b> Bull Put &amp; Bear Call Credit Spreads for high volatility.</p><p><b>Debit Spreads:</b> Bull Call &amp; Bear Put Debit Spreads for low volatility.</p></div>
+<div class="b"><h4>3. Volatility &amp; Risk Engineering</h4><p><b>Regime Detection:</b> 52-Week Implied Volatility Percentile (IVP).</p><p><b>Greek Translation:</b> Delta (0.50 ATM) option stop loss mapping.</p><p><b>Slippage Mitigation:</b> 5%-10% Vega/Gamma buffers during earnings.</p><p><b>Expiry Management:</b> Next Month Expiry contract handshakes.</p></div>
+<div class="b"><h4>4. Platforms &amp; Order Management</h4><p><b>Execution Architecture:</b> Streak, Python REST APIs, Algo Engines.</p><p><b>Order Type Protocols:</b> Strict NRML (Overnight) enforcement.</p><p><b>Execution Types:</b> Limit, Market, Stop-Loss (SL), MIS, CNC, IOC.</p><p><b>Sectors:</b> High-beta Automotive OEMs &amp; Index Futures.</p></div></div>
+<h2>STRATEGY SELECTOR MATRIX (IVP VOLATILITY REGIME FRAMEWORK)</h2><p class="sub">Dynamic asset allocation routing based on 52-week Implied Volatility Percentile (IVP) and technical signals.</p>
+<div class="tw"><table><tr><th>VOLATILITY REGIME</th><th>MARKET TREND</th><th>PRIMARY TECHNICAL TRIGGER</th><th>SELECTED OPTIONS STRATEGY</th><th>PRIMARY EDGE SOURCE</th></tr>
+<tr><td>High IVP (&gt; 50)<br>Options Expensive</td><td>Bullish</td><td>RSI (14) &gt; 60 AND Supertrend (100, 1.65) Green</td><td>Sell ATM Put / Bull Put Credit Spread</td><td>Vega Collapse + Theta Decay + Delta</td></tr>
+<tr><td>High IVP (&gt; 50)<br>Options Expensive</td><td>Bearish</td><td>RSI (14) &lt; 40 AND Supertrend (100, 1.65) Red</td><td>Sell ATM Call / Bear Call Credit Spread</td><td>Vega Collapse + Theta Decay + Delta</td></tr>
+<tr><td>Low IVP (&lt; 50)<br>Options Discounted</td><td>Bullish</td><td>RSI (14) &gt; 60 AND Triple ST Green (10,1 / 11,2 / 12,3)</td><td>Buy ATM Call / Bull Call Debit Spread</td><td>Gamma Acceleration + Convexity</td></tr>
+<tr><td>Low IVP (&lt; 50)<br>Options Discounted</td><td>Bearish</td><td>RSI (14) &lt; 40 AND Triple ST Red (10,1 / 11,2 / 12,3)</td><td>Buy ATM Put / Bear Put Debit Spread</td><td>Gamma Acceleration + Convexity</td></tr></table></div>
+<h2>UNIFIED MONTHLY EXECUTION CALENDAR &amp; CATALYST WORKFLOW</h2><p class="sub">Systematic calendar-based lifecycle for trading recurring automotive OEM sales volume disclosures.</p>
+<h3>MULTI-LEG SYNTHETIC FUTURES CONFIGURATION</h3>
+<div class="tw"><table><tr><th>STRATEGY MODE</th><th>LEG STRUCTURE</th><th>OPTION STRIKE &amp; EXPIRY</th><th>TECHNICAL ENTRY CONDITION</th><th>EXIT RULE PROTOCOL</th></tr>
+<tr><td>Synthetic Long Future</td><td>Leg 1: BUY Call (CE)<br>Leg 2: SELL Put (PE)</td><td>At-The-Money (ATM)<br>Next Month Expiry</td><td>RSI (14) &gt; 60 AND Close &gt; Supertrend (100, 1.65)</td><td>Close &lt; Supertrend (100, 1.65) OR Calendar Hard Exit (Days 30–01)</td></tr>
+<tr><td>Synthetic Short Future</td><td>Leg 1: BUY Put (PE)<br>Leg 2: SELL Call (CE)</td><td>At-The-Money (ATM)<br>Next Month Expiry</td><td>RSI (14) &lt; 40 AND Close &lt; Supertrend (100, 1.65)</td><td>Close &gt; Supertrend (100, 1.65) OR Calendar Hard Exit (Days 30–01)</td></tr></table></div>
+<div class="g"><div class="b"><h4>Days 01–19 STANDBY PHASE</h4><p>No entries. Scan universe &amp; monitor macro trends.</p></div><div class="b"><h4>Days 20–24 ENTRY WINDOW</h4><p>Validate RSI + ST. Initiate Next Month contracts.</p></div><div class="b"><h4>Days 25–29 HOLD &amp; TRAIL</h4><p>Hold NRML overnight. Exit only on ST reversal.</p></div><div class="b"><h4>Days 30–01 HARD EXIT / HARVEST</h4><p>Mandatory square-off to harvest IV Crush post-release.</p></div></div>
+<h2>RISK ENGINEERING &amp; DELTA TRANSLATION MATHEMATICS</h2>
+<p><b>Option Stop Loss Mathematical Formula:</b></p>
+<pre>Underlying Risk = | Current Stock Price − Supertrend Stop Price |
+Option Contract Risk = Underlying Risk × Option Delta (0.50 ATM)
+Option Exit Limit Price = Entry Premium − Option Risk (adjusted for 10% Vega buffer during earnings)</pre>
+<h3>PRACTICAL OPTION STOP-LOSS CALCULATION EXAMPLE</h3>
+<div class="tw"><table><tr><th>PARAMETER TYPE</th><th>UNDERLYING STOCK METRICS</th><th>OPTION CONTRACT PARAMETERS</th><th>CALCULATED EXECUTION ACTION</th></tr>
+<tr><td>Current Price / Premium</td><td>₹1,000.00 (Spot / Futures)</td><td>₹30.00 (ATM Call / Put)</td><td>Initiate Trade NRML Mode</td></tr>
+<tr><td>Stop Loss Reference Level</td><td>₹980.00 (Supertrend Line)</td><td>Delta = 0.50 (At-The-Money)</td><td>Underlying Risk = ₹20.00</td></tr>
+<tr><td>Translated Contract Risk</td><td>20.00 Risk Points per share</td><td>Option Risk = ₹20.00 × 0.50 = ₹10.00</td><td>Exit Premium Price = ₹40.00</td></tr></table></div>
+<h2>PYTHON ALGORITHMIC ENGINE (CORE MODULE EXTRACT)</h2>
+<pre>import numpy as np
+import pandas as pd
+
+class AutoSectorQuantEngine:
+    def __init__(self, watchlist=None):
+        self.watchlist = watchlist or ['TATAMOTORS', 'M&amp;M', 'MARUTI', 'BAJAJ-AUTO']
+
+    def calculate_rsi(self, df, period=14):
+        delta = df['close'].diff()
+        gain = (delta.where(delta &gt; 0, 0)).rolling(window=period).mean()
+        loss = (-delta.where(delta &lt; 0, 0)).rolling(window=period).mean()
+        rs = gain / loss.replace(0, np.nan)
+        return (100 - (100 / (1 + rs))).fillna(50)
+
+    def calculate_ivp(self, current_iv, iv_history_52wk):
+        low_iv, high_iv = np.min(iv_history_52wk), np.max(iv_history_52wk)
+        if high_iv == low_iv:
+            return 50.0
+        return float(((current_iv - low_iv) / (high_iv - low_iv)) * 100.0)
+
+    def calculate_option_stop_loss(self, spot_price, supertrend_price, option_premium, delta=0.50, is_earnings=False):
+        underlying_risk = abs(spot_price - supertrend_price)
+        option_risk = underlying_risk * delta
+        if is_earnings:
+            option_risk *= 1.10  # 10% Vega/Gamma slippage buffer
+        return max(0.10, round(option_premium - option_risk, 2))</pre>
+<h2>KEY PROJECTS &amp; ALGORITHMIC ACHIEVEMENTS</h2>
+<div class="b"><h4>1. Auto OEM Event-Driven Volatility Exploitation Engine</h4><p>Architected a systematic trading framework targeting recurring automotive sales volume releases on the 1st of every month. The strategy systematically captures pre-event Implied Volatility expansion (20th–25th window) and harvests rapid Vega crush post-announcement, yielding high win-rate credit spread executions.</p></div><br>
+<div class="b"><h4>2. Synchronized Multi-Leg Synthetic Futures Execution System</h4><p>Developed REST API batch routing routines for dual-leg synthetic futures (ATM Long Call + Short Put). Enforced concurrent order fill mechanisms to eliminate execution leg risk and guaranteed Next Month contract handshakes to prevent theta decay drag.</p></div>
+<h2>MANDATORY OPERATIONAL DIRECTIVES &amp; RISK GOVERNANCE</h2>
+<p><b>No Indicator, No Trade:</b> Micro-fundamental news only builds the watchlist; technical indicators (RSI 14 + Supertrend 100, 1.65) provide 100% of execution triggers.</p>
+<p><b>NRML Order Type Enforcement:</b> Intraday MIS orders are strictly forbidden across all derivative legs. All positions are initialized as NRML overnight contracts for trend holding.</p>
+<p><b>Binary Risk Restrictions:</b> Naked ATM options selling is prohibited during high-impact binary quarterly earnings announcements. Defined-risk Credit Spreads are mandatory.</p>
+<h2>EDUCATION, PHYSICAL DISCIPLINE &amp; PERSONAL BACKGROUND</h2>
+<div class="g"><div class="b"><h4>Formal Education</h4><p>9th Pass</p><p>Demonstrates exceptional self-taught technical capability, algorithmic system design mastery, and practical derivatives market application through direct experience.</p></div>
+<div class="b"><h4>Endurance Hobbies &amp; Mental Discipline</h4><p><b>Cycling:</b> Long-distance endurance rides build stamina, pacing discipline, and strategic focus necessary for prolonged market holding.</p><p><b>Swimming:</b> Regular swimming fosters disciplined breath control, physical resilience, and extreme composure under pressure.</p></div></div>
+</section>
+
+<!-- 3 -->
+<section class="doc" data-t="Equity Futures Strategy">
+<h1>ALGORITHMIC TRADING SPECIFICATION DOCUMENT</h1><p class="sub"><b>EQUITY FUTURES DIRECT STRATEGY</b></p>
+<div class="chips"><div><b>SEGMENT</b>NFO / Equity Futures</div><div><b>TIMEFRAME</b>1 Hour (1h)</div><div><b>EXECUTION TYPE</b>Direct Futures Contract</div><div><b>CONTRACT MONTH</b>Next Month Expiry</div></div>
+<div class="b"><h4>DEVELOPER ARCHITECTURE NOTE</h4><p>This document defines direct Futures trading execution for Equity / Index Futures (e.g., Nifty FUT, Bank Nifty FUT, or Stock Futures). Instead of combining options legs, orders are executed directly on the underlying Futures contract of Next Month Expiry. Entry rules require strict AND conditions, and exits trigger strictly on Supertrend cross signals.</p></div>
+<h2>1. FUTURES SETUP &amp; CONTRACT SELECTION</h2>
+<div class="tw"><table><tr><th>TRADE TYPE</th><th>POSITION ACTION</th><th>INSTRUMENT TYPE</th><th>EXPIRY SELECTION</th><th>ORDER TYPE</th></tr>
+<tr><td>Long Futures (Bullish Trend)</td><td>BUY</td><td>Equity / Index Futures (FUT)</td><td>Next Month Expiry</td><td>NRML (Overnight)</td></tr>
+<tr><td>Short Futures (Bearish Trend)</td><td>SELL</td><td>Equity / Index Futures (FUT)</td><td>Next Month Expiry</td><td>NRML (Overnight)</td></tr></table></div>
+<h2>2. EXACT SIGNAL &amp; EXECUTION RULES</h2>
+<div class="g"><div class="b"><h4>A. BULLISH LONG FUTURES</h4><p><b>ENTRY CONDITIONS (BOTH MUST BE TRUE):</b></p><ul><li>RSI (14, Close) HIGHER THAN 60</li><li>Close CROSSES ABOVE Supertrend (100, 1.65)</li></ul><p><b>ACTION ON ENTRY:</b> BUY Next Month Futures Contract</p><p><b>EXIT CONDITION:</b> Close CROSSES BELOW Supertrend (100, 1.65)</p></div>
+<div class="b"><h4>B. BEARISH SHORT FUTURES</h4><p><b>ENTRY CONDITIONS (BOTH MUST BE TRUE):</b></p><ul><li>RSI (14, Close) LOWER THAN 40</li><li>Close CROSSES BELOW Supertrend (100, 1.65)</li></ul><p><b>ACTION ON ENTRY:</b> SELL Next Month Futures Contract</p><p><b>EXIT CONDITION:</b> Close CROSSES ABOVE Supertrend (100, 1.65)</p></div></div>
+<h2>3. REQUIRED INDICATOR PARAMETERS</h2>
+<div class="tw"><table><tr><th>INDICATOR NAME</th><th>PRIMARY VARIABLE</th><th>SECONDARY THRESHOLD / MULTIPLIER</th><th>APPLIED FIELD</th></tr>
+<tr><td>Relative Strength Index (RSI)</td><td>Period: 14</td><td>Bullish: &gt; 60<br>Bearish: &lt; 40</td><td>Close Price</td></tr>
+<tr><td>Supertrend</td><td>Period: 100</td><td>Multiplier: 1.65</td><td>Close Price</td></tr></table></div>
+<h2>4. IMPLEMENTATION &amp; VERIFICATION CHECKLIST</h2>
+<ul><li><b>Chart Data Source:</b> Ensure calculations evaluate on completed 1-Hour candles (1h timeframe).</li><li><b>Underlying vs Contract:</b> Indicator calculations should run on the active Futures chart or spot chart as per preference.</li><li><b>Expiry Handshake:</b> Ensure order routing specifically selects Next Month Expiry Futures contracts.</li><li><b>Order Type Enforcement:</b> Use strictly NRML order type for carry-forward capability. Do NOT use MIS.</li><li><b>Early Square-off Rule:</b> If exit conditions trigger (Supertrend cross), immediately square off the position in NRML mode, regardless of holding duration.</li><li><b>Position Sizing:</b> Verify lot size compliance for equity index / stock futures before order placement.</li><li><b>No Hedging / Single Position:</b> Strategy is pure trend-following on Futures without option legs or offset hedges.</li></ul>
+<p class="note">Equity Futures Trading Strategy Specification — Developer Document</p>
+</section>
+
+<!-- 4 -->
+<section class="doc" data-t="Notes Document">
+<h1>NOTES</h1><div class="blank"><p>DATE: _________________</p><p>Topic: _________________</p></div>
+</section>
+
+<!-- 5 -->
+<section class="doc" data-t="Oil Sector Playbooks">
+<h1>REPORT 1: UPSTREAM OIL COMPANIES (E&amp;P)</h1><p class="sub"><b>TECHNICAL, OPTION &amp; FUNDAMENTAL TRADING STRATEGY FRAMEWORK</b><br>Target Stocks (NSE F&amp;O): ONGC, OIL (Oil India), RELIANCE (E&amp;P Segment)</p>
+<h2>1. Fundamental Drivers &amp; Catalyst Data</h2>
+<div class="g"><div class="b"><h4>Core Commodity Benchmarks</h4><ul><li><b>Spot Brent &amp; WTI Crude:</b> Direct 1:1 revenue correlation. Higher crude prices instantly increase realizations per barrel.</li><li><b>Direct Relationship:</b> Rising Crude = BULLISH | Falling Crude = BEARISH</li></ul></div>
+<div class="b"><h4>Key Scheduled Event Releases</h4><ul><li><b>API Report (Tue 4:30 PM ET):</b> Early inventory direction.</li><li><b>EIA Weekly Report (Wed 10:30 AM ET):</b> Crude Drawdown (&lt; Forecast) = Bullish | Crude Build (&gt; Forecast) = Bearish.</li><li><b>Baker Hughes Rigs (Fri 1:00 PM ET):</b> Drilling capacity tracking.</li></ul></div></div>
+<h2>2. Strategy A: Futures Trend Following + Triple Supertrend &amp; RSI</h2>
+<h3>Execution Rules: Futures &amp; Options Matrix</h3>
+<div class="tw"><table><tr><th>Indicator Signal</th><th>Futures Action</th><th>Option Selling (IVP &gt; 50)</th><th>Option Buying (IVP &lt; 50)</th></tr>
+<tr><td>RSI &gt; 60<br>3 Supertrends Green</td><td>BUY Futures</td><td>Sell ATM Put / Bull Put Credit Spread</td><td>Buy ATM Call / Bull Call Debit Spread</td></tr>
+<tr><td>RSI &lt; 40<br>3 Supertrends Red</td><td>SELL Futures</td><td>Sell ATM Call / Bear Call Credit Spread</td><td>Buy ATM Put / Bear Put Debit Spread</td></tr></table></div>
+<p class="note">*Triple Supertrend Settings: (10, 1), (11, 2), (12, 3) | RSI Period: 14</p>
+<h2>3. Strategy B: Futures Mean Reversion (Bollinger Bands + RSI)</h2>
+<h3>Execution Rules: Range &amp; Counter-Trend Setups</h3>
+<div class="g"><div class="b"><h4>Long Mean Reversion Setup:</h4><p>1. Price touches or pierces below the Lower Bollinger Band (20, 2).</p><p>2. RSI (14) drops below 30 (oversold) and hooks back above 35.</p><p>3. Action: Go Long Futures or Buy ATM Call (if IVP &lt; 50) / Sell OTM Put (if IVP &gt; 50). Target = Middle Band (20 SMA).</p></div>
+<div class="b"><h4>Short Mean Reversion Setup:</h4><p>1. Price touches or pierces above the Upper Bollinger Band (20, 2).</p><p>2. RSI (14) rises above 70 (overbought) and hooks back below 65.</p><p>3. Action: Short Futures or Buy ATM Put (if IVP &lt; 50) / Sell OTM Call (if IVP &gt; 50). Target = Middle Band (20 SMA).</p></div></div>
+<h3>Option Stop Loss Calculation (Delta Method):</h3>
+<pre>Underlying Risk = | Current Stock Price − Supertrend (12, 3) Level |
+Option Premium SL = Entry Option Price − (Underlying Risk × Option Delta)</pre>
+<p class="note">Oil Sector Trading Framework • Upstream</p>
+<h1 style="margin-top:34px">REPORT 2: DOWNSTREAM OIL COMPANIES (RMC)</h1><p class="sub"><b>TECHNICAL, OPTION &amp; FUNDAMENTAL TRADING STRATEGY FRAMEWORK</b><br>Target Stocks (NSE F&amp;O): IOC, BPCL, HPCL (HINDPETRO)</p>
+<h2>1. Fundamental Drivers &amp; Catalyst Data</h2>
+<div class="g"><div class="b"><h4>Inverse Crude &amp; Input Costs</h4><ul><li><b>Refinery Raw Input:</b> Downstream buys crude oil as raw material.</li><li><b>Inverse Relationship:</b> Rising Crude = BEARISH (Margin Squeeze) | Falling Crude = BULLISH (Expanded Retail Margins)</li></ul></div>
+<div class="b"><h4>Primary Margin Metrics</h4><ul><li><b>Singapore Complex GRM:</b> Gross Refining Margin per barrel.</li><li><b>Crack Spreads:</b> Price gap between crude and finished petrol/diesel.</li><li><b>Retail Price Controls:</b> Govt freeze on fuel pump prices.</li></ul></div></div>
+<h2>2. Strategy A: Trend Breakdown &amp; Continuation (Triple Supertrend + RSI)</h2>
+<h3>Execution Rules: Futures &amp; Options Matrix</h3>
+<div class="tw"><table><tr><th>Indicator Signal</th><th>Futures Action</th><th>Option Selling (IVP &gt; 50)</th><th>Option Buying (IVP &lt; 50)</th></tr>
+<tr><td>RSI &gt; 60<br>3 Supertrends Green</td><td>BUY Futures</td><td>Sell ATM Put / Bull Put Credit Spread</td><td>Buy ATM Call / Bull Call Debit Spread</td></tr>
+<tr><td>RSI &lt; 40<br>3 Supertrends Red</td><td>SELL Futures</td><td>Sell ATM Call / Bear Call Credit Spread</td><td>Buy ATM Put / Bear Put Debit Spread</td></tr></table></div>
+<h2>3. Strategy B: Downstream Mean Reversion (Bollinger Bands + RSI)</h2>
+<h3>Execution Rules: Mean Reversion on Crude Spikes</h3>
+<p>Downstream refiners often overreact to short-term crude spikes, creating strong mean-reversion setups:</p>
+<p>1. <b>Long Entry:</b> Price pierces Lower Bollinger Band + RSI drops &lt; 35 and hooks up above 40 → Buy Futures / ATM Call targeting 20 SMA.</p>
+<p>2. <b>Short Entry:</b> Price pierces Upper Bollinger Band + RSI rises &gt; 65 and hooks down below 60 → Short Futures / ATM Put targeting 20 SMA.</p>
+<h2>4. Upstream vs. Downstream Comparative Playbook</h2>
+<div class="tw"><table><tr><th>Parameter</th><th>Upstream Sector (ONGC, OIL)</th><th>Downstream Sector (IOC, BPCL, HPCL)</th></tr>
+<tr><td>Crude Price Impact</td><td>Direct Positive (High Crude = High Profits)</td><td>Inverse Negative (High Crude = Margin Squeeze)</td></tr>
+<tr><td>Key Fundamental Data</td><td>EIA Weekly Inventories, Brent Spot Price</td><td>Singapore GRM, Petrol/Diesel Crack Spreads</td></tr>
+<tr><td>Preferred Options Setup</td><td>Buy Calls on low IVP post-EIA drawdown</td><td>Buy Puts on low IVP when crude surges</td></tr>
+<tr><td>Risk Allocation Buffer</td><td>Standard Delta SL Calculation</td><td>Add +10% Vega/Gamma buffer on earnings days</td></tr></table></div>
+<p class="note">Oil Sector Trading Framework • Downstream</p>
+</section>
+
+<!-- 6 -->
+<section class="doc" data-t="Calendar Schedule">
+<h1>OIL SECTOR SYSTEM EXECUTION REPORT: CALENDAR SCHEDULE</h1><p class="sub">Oil-Activity-Based Execution Calendar &amp; Event Timetable | Oil, Gas, Aviation &amp; Paints | Equity Futures &amp; Options</p>
+<div class="chips"><div><b>TIMEFRAME</b>1 Hour (1h)</div><div><b>CONTRACT EXPIRY</b>Next Month Expiry</div><div><b>ORDER TYPE</b>NRML (Overnight)</div><div><b>EXECUTION MODE</b>Futures &amp; Synthetic Options</div></div>
+<h2>1. WHY OIL NEEDS ITS OWN CALENDAR</h2>
+<div class="tw"><table><tr><th></th><th>Auto Sector (reference)</th><th>Oil Sector (this system)</th></tr>
+<tr><td>Main catalyst</td><td>One event per month: vehicle sales published on the 1st</td><td>Crude trades continuously; scheduled catalysts arrive in three clusters across the month</td></tr>
+<tr><td>When IV builds</td><td>20th-25th, ahead of the 1st</td><td>Before the OPEC+ / ATF cluster (late month) and before the OPEC / IEA reports (early-to-mid month)</td></tr>
+<tr><td>Cycles per month</td><td>One (enter 20th-24th, exit 30th-1st)</td><td>Two: Cycle A (Report Cycle) and Cycle B (Catalyst Cycle)</td></tr>
+<tr><td>Gap risk</td><td>Mostly on the 1st</td><td>Sunday OPEC+ meetings gap the Monday open; Wednesday-evening EIA data gaps Thursday; Brent trades while NSE is shut</td></tr></table></div>
+<h2>2. MONTHLY OIL ACTIVITY MAP (WHEN OIL IS ACTIVE)</h2>
+<div class="tw"><table><tr><th>Day of month</th><td>1–7</td><td>8–10</td><td>11–16</td><td>17–20</td><td>21–26</td><td>27–31</td></tr>
+<tr><th>SYSTEM PHASE</th><td>CATALYST RELEASE</td><td>ENTRY A</td><td>REPORT WINDOW</td><td>COOL-DOWN</td><td>ENTRY B</td><td>HOLD &amp; TRAIL</td></tr></table></div>
+<div class="tw"><table><tr><th>Event</th><th>Timing</th></tr>
+<tr><td>ATF price revision (OMCs)</td><td>ATF — 1st</td></tr><tr><td>OPEC+ monthly meeting</td><td>OPEC+ (often Sun) — 1st-6th</td></tr><tr><td>EIA Short-Term Outlook</td><td>EIA STEO — around 6th-9th</td></tr><tr><td>OPEC MOMR + IEA OMR</td><td>OPEC / IEA reports — 10th-14th</td></tr><tr><td>WTI contract roll (approx.)</td><td>WTI roll — around 20th-22nd</td></tr><tr><td>NSE stock F&amp;O expiry (last Tue)</td><td>last Tuesday (25th-31st)</td></tr><tr><td>Brent front-month expiry</td><td>last biz day</td></tr></table></div>
+<p class="note">OPEC+ has recently met on the 1st-6th (4 Jan, 1 Feb, 1 Mar, 5 Apr, 6 Sep, 4 Oct 2026), mostly on Sundays. IEA OMR and OPEC MOMR have been released between the 10th and 14th. EIA STEO falls around the 6th-9th. NSE stock F&amp;O monthly contracts expire on the last Tuesday. Brent front-month contracts expire on the last business day. WTI roll is approximate. Confirm every date monthly.</p>
+<h2>3. MONTHLY EXECUTION CALENDAR &amp; TIME WINDOW RULES</h2>
+<div class="b"><h4>Core Calendar Constraint Protocol</h4><p>All trades across both Direct Futures and Synthetic Options must strictly adhere to the monthly entry and exit windows above, in combination with indicator triggers. A signal outside Entry Window A or B is ignored. Cycle A and Cycle B never overlap: all Cycle A legs are flat before the 17th.</p></div>
+<div class="tw"><table><tr><th>Execution Phase</th><th>Calendar Window</th><th>Required Technical Conditions</th><th>System Action</th></tr>
+<tr><td>Entry Window A (Report Cycle)</td><td>8th to 10th of every month</td><td>RSI (14) &amp; Supertrend (100, 1.65) Cross, with Crude Gate aligned</td><td>Initiate Next Month Futures or Synthetic ATM Leg positions (Cycle A)</td></tr>
+<tr><td>Entry Window B (Catalyst Cycle)</td><td>21st to 26th of every month</td><td>RSI (14) &amp; Supertrend (100, 1.65) Cross, with Crude Gate aligned; check IVP</td><td>Initiate Next Month Futures or Synthetic ATM Leg positions (Cycle B)</td></tr>
+<tr><td>Technical Exit</td><td>Anytime post-entry</td><td>Supertrend Reversal Signal</td><td>Immediate Square-off of all active legs</td></tr>
+<tr><td>Calendar Hard Exit A</td><td>11th to 16th (after OPEC MOMR and IEA OMR are out)</td><td>Calendar Target Reached (regardless of indicators)</td><td>Mandatory Square-off of all Cycle A positions by the close of the 16th</td></tr>
+<tr><td>Calendar Hard Exit B</td><td>1st to 7th (after ATF revision and OPEC+ meeting)</td><td>Calendar Target Reached (regardless of indicators)</td><td>Mandatory Square-off of all Cycle B positions by the close of the first full session after the OPEC+ meeting, latest 7th</td></tr>
+<tr><td>No-Entry Zones</td><td>1st-7th, 11th-20th, 27th to month-end</td><td>Any signal in these dates</td><td>Signal ignored; no new orders</td></tr></table></div>
+<h2>4. EXECUTION TIMELINE WORKFLOW</h2>
+<div class="g"><div class="b"><h4>1-7 CATALYST RELEASE</h4><p>No entry. Scale out after ATF revision + OPEC+ meeting. Cycle B hard exit.</p></div><div class="b"><h4>8-10 ENTRY WINDOW A</h4><p>Post-event reset. Crude Gate + RSI + ST cross.</p></div><div class="b"><h4>11-16 REPORT WINDOW</h4><p>Hold &amp; trail through OPEC / IEA reports. Cycle A hard exit.</p></div><div class="b"><h4>17-20 COOL-DOWN</h4><p>Flat. No entry. Re-read Crude Gate after WTI roll.</p></div><div class="b"><h4>21-26 ENTRY WINDOW B</h4><p>Pre-catalyst positioning. IVP check + RSI + ST cross.</p></div><div class="b"><h4>27-31 HOLD &amp; TRAIL</h4><p>No new entries. Trail ST into OPEC+ / ATF.</p></div></div>
+<h2>5. CYCLE A vs CYCLE B</h2>
+<div class="tw"><table><tr><th>Item</th><th>Cycle A: Report Cycle</th><th>Cycle B: Catalyst Cycle</th></tr>
+<tr><td>Anchor event</td><td>OPEC MOMR and IEA OMR (demand and supply outlook revisions)</td><td>ATF price revision (1st) and OPEC+ monthly meeting (1st-6th)</td></tr>
+<tr><td>Entry window</td><td>8th-10th (post-event reset; IV usually lower after the early-month catalysts)</td><td>21st-26th (pre-event positioning; IV tends to expand into the catalysts)</td></tr>
+<tr><td>Hold period</td><td>11th-16th: hold and trail Supertrend through the reports</td><td>27th to month-end, then into the 1st-7th: hold and trail</td></tr>
+<tr><td>IVP bias</td><td>Often IVP &lt; 50: favours buying ATM options / debit spreads</td><td>Often IVP rising: favours futures or synthetics; credit spreads only when IVP &gt; 50 and event risk is defined</td></tr>
+<tr><td>Hard exit</td><td>By close of the 16th; 70%-80% right after both reports are out</td><td>By close of first full session after the OPEC+ meeting (latest 7th); 70%-80% right after the release</td></tr>
+<tr><td>Contract used</td><td>Next Month Expiry (current month contract is never used)</td><td>Next Month Expiry; becomes the near-month contract after the last-Tuesday expiry, never rolled</td></tr></table></div>
+<h2>6. LIVE CALENDAR: OCTOBER - DECEMBER 2026</h2>
+<div class="tw"><table><tr><th>Date (2026)</th><th>Phase</th><th>Oil / Market Event</th><th>System Action</th></tr>
+<tr><td>Mon 12 Oct (today)</td><td>Report Window (11-16)</td><td>OPEC MOMR due Tue 13 Oct; IEA OMR due Wed 14 Oct</td><td>Hold &amp; trail any Cycle A positions; no new entries</td></tr>
+<tr><td>Fri 16 Oct</td><td>Report Window ends</td><td>-</td><td>Cycle A hard exit deadline (close)</td></tr>
+<tr><td>17-20 Oct</td><td>Cool-Down</td><td>WTI roll around the 20th-22nd</td><td>Flat; re-read Crude Gate after roll</td></tr>
+<tr><td>21-26 Oct</td><td>Entry Window B</td><td>Pre-catalyst positioning</td><td>Check IVP; Crude Gate + RSI + ST cross entries (Nov contract)</td></tr>
+<tr><td>Tue 27 Oct</td><td>Hold &amp; Trail starts</td><td>NSE Oct stock F&amp;O expiry</td><td>No new entries; Nov contract unaffected</td></tr>
+<tr><td>Sun 1 Nov</td><td>Catalyst Release</td><td>OPEC+ meeting (confirmed 1 Nov); ATF revision on the 1st</td><td>Weekend gap risk into Monday</td></tr>
+<tr><td>Mon 2 Nov</td><td>Catalyst Release</td><td>First full session after OPEC+</td><td>Exit 70%-80% on the reaction; all Cycle B legs flat by the close</td></tr>
+<tr><td>Mon 9 - Tue 10 Nov</td><td>Entry Window A</td><td>Post-event reset (8th is a Sunday)</td><td>Crude Gate + RSI + ST cross entries (Dec contract)</td></tr>
+<tr><td>11 / 13 Nov</td><td>Report Window</td><td>OPEC MOMR Wed 11 Nov; IEA OMR Fri 13 Nov</td><td>Hold &amp; trail; exit after both reports, latest Mon 16 Nov close</td></tr>
+<tr><td>21-26 Nov</td><td>Entry Window B</td><td>NSE Nov expiry Tue 24 Nov (inside window)</td><td>Avoid new entries on the 24th*; Dec contract used</td></tr>
+<tr><td>Tue 1 Dec</td><td>Catalyst Release</td><td>ATF revision; OPEC+ date to be announced after the 1 Nov meeting</td><td>Exit after OPEC+ reaction session</td></tr>
+<tr><td>11 / 14 Dec</td><td>Report Window</td><td>IEA OMR Fri 11 Dec; OPEC MOMR Mon 14 Dec</td><td>Exit after both; Dec expiry Tue 29 Dec</td></tr></table></div>
+<p class="note">Confirmed from sources: OPEC+ next meeting 1 Nov 2026; IEA OMR 14 Oct, 13 Nov, 11 Dec; OPEC MOMR 13 Oct, 11 Nov, 14 Dec; NSE Oct expiry 27 Oct. Nov and Dec NSE expiries follow the last-Tuesday rule (holiday adjustments possible). EIA STEO dates for Nov/Dec and the Dec OPEC+ meeting date should be checked.</p>
+<h2>7. WEEKLY OIL RHYTHM (RUNS INSIDE EVERY PHASE)</h2>
+<div class="tw"><table><tr><th>Day</th><th>Event</th><th>Effect on NRML Positions</th></tr>
+<tr><td>Tuesday night (IST)</td><td>API crude inventory estimate</td><td>Early read; informational only. NSE weekly / monthly expiry day is also Tuesday.</td></tr>
+<tr><td>Wednesday evening (IST)</td><td>EIA weekly petroleum status report (about 8 pm IST in US daylight time, about 9 pm IST otherwise)</td><td>Lands after Indian close; reaction shows as Thursday opening gap.</td></tr>
+<tr><td>Thursday open</td><td>Gap reaction to EIA</td><td>Stops do not protect against gaps; hold naked short-option legs at reduced size or convert to spreads on Wednesdays*.</td></tr>
+<tr><td>Friday close to Monday open</td><td>Weekend headlines; OPEC+ often meets on Sunday</td><td>Largest scheduled gap risk of the month when the OPEC+ Sunday falls in the 1st-7th.</td></tr></table></div>
+<h2>8. QUARTERLY EARNINGS OVERLAY</h2>
+<div class="tw"><table><tr><th>Quarter (Indian FY)</th><th>Typical Results Season</th><th>Pre-Runup (7-10 Days Prior)</th><th>Pre-Result (1-2 Days Prior)</th></tr>
+<tr><td>Q1 (Apr-Jun)</td><td>Late Jul - mid Aug</td><td>Buy options on rising IVP; exit 1 day prior to results.</td><td>Sell defined-risk credit spreads ONLY when IVP &gt; 70.</td></tr>
+<tr><td>Q2 (Jul-Sep)</td><td>Late Oct - mid Nov</td><td>Buy options on rising IVP; exit 1 day prior to results.</td><td>Sell defined-risk credit spreads ONLY when IVP &gt; 70.</td></tr>
+<tr><td>Q3 (Oct-Dec)</td><td>Late Jan - mid Feb</td><td>Buy options on rising IVP; exit 1 day prior to results.</td><td>Sell defined-risk credit spreads ONLY when IVP &gt; 70.</td></tr>
+<tr><td>Q4 (Jan-Mar)</td><td>Late Apr - May</td><td>Buy options on rising IVP; exit 1 day prior to results.</td><td>Sell defined-risk credit spreads ONLY when IVP &gt; 70.</td></tr></table></div>
+<p class="note">Q2 results season overlaps Entry Window B (21st-26th Oct) and Cycle B this year. Use each company's announced board-meeting date.</p>
+<h2>9. CALENDAR CONFLICT &amp; PRIORITY RULES</h2>
+<div class="tw"><table><tr><th>Situation</th><th>System Rule</th></tr>
+<tr><td>Supertrend reverses before the hard exit date</td><td>Technical exit overrides the calendar. Whichever comes first (Supertrend cross OR calendar hard exit) closes all legs.</td></tr>
+<tr><td>Results date falls inside a held trade</td><td>Naked option legs are not allowed through results; convert to a defined-risk spread or exit the day before. Futures follow Supertrend / calendar exits.</td></tr>
+<tr><td>OPEC+ meeting date moves outside the 1st-6th</td><td>Hard Exit B follows the actual meeting: exit after its first full reaction session. Entry Window B is unchanged.</td></tr>
+<tr><td>Extraordinary OPEC+ or geopolitical meeting*</td><td>Technical exit and Crude Gate still apply; no new entries until the next scheduled entry window.</td></tr>
+<tr><td>Window falls on weekend / market holiday*</td><td>Use the first available session inside the window. If none exists, exit on the last session before it. Entry windows are never extended.</td></tr>
+<tr><td>NSE last-Tuesday expiry inside Entry Window B*</td><td>No new entries on expiry day itself; the next-month contract is unaffected by the expiry.</td></tr></table></div>
+<h2>10. CALENDAR IMPLEMENTATION CHECKLIST</h2>
+<ul><li>✓ <b>Entry Window Lock:</b> The scheduler blocks any new entry order outside the 8th-10th and 21st-26th of every month.</li><li>✓ <b>Cycle Separation:</b> Cycle A positions are flat by the close of the 16th; Cycle B positions are flat by the 7th. No overlap.</li><li>✓ <b>Hard Exit Handler:</b> Exit 70%-80% right after the anchor release, and square off the balance by the cycle's deadline, regardless of indicators.</li><li>✓ <b>Dual Exit Logic:</b> Trigger exits on whichever comes first: Supertrend cross signal OR the cycle's calendar hard exit.</li><li>✓ <b>Event Calendar Feed:</b> Refresh OPEC+, OPEC MOMR, IEA OMR, EIA STEO and company results dates at the start of every month.</li><li>✓ <b>Holiday &amp; Expiry Sync:</b> Pull the exchange holiday list and NSE last-Tuesday expiry so window logic uses real sessions.</li><li>✓ <b>Contract Roll Check:</b> Re-read the Brent / MCX Crude regime after contract rolls (WTI around the 20th-22nd, Brent at month-end).*</li></ul>
+<div class="b"><h4>Note</h4><p>Phase windows are a design built from the oil event calendar and must be backtested before live use. Items marked * are operational additions. This document is a research framework, not investment advice.</p></div>
+</section>
+
+<!-- 7 -->
+<section class="doc" data-t="Execution Specification">
+<h1>OIL SECTOR SYSTEM EXECUTION SPECIFICATION REPORT</h1><p class="sub">Unified Execution Calendar &amp; Technical Rulebook | Oil, Gas, Aviation &amp; Paints | Equity Futures &amp; Options</p>
+<div class="chips"><div><b>TIMEFRAME</b>1 Hour (1h)</div><div><b>CONTRACT EXPIRY</b>Next Month Expiry</div><div><b>ORDER TYPE</b>NRML (Overnight)</div><div><b>EXECUTION MODE</b>Futures &amp; Synthetic Options</div></div>
+<h2>1. MONTHLY EXECUTION CALENDAR &amp; TIME WINDOW RULES</h2>
+<div class="b"><h4>Core Calendar Constraint Protocol</h4><p>All trades across both Direct Futures and Synthetic Options must strictly adhere to the monthly calendar entry and exit windows in combination with indicator triggers. The windows follow the oil event calendar: Cycle A around the OPEC / IEA reports, Cycle B around the ATF revision and OPEC+ meeting.</p></div>
+<div class="tw"><table><tr><th>Execution Phase</th><th>Calendar Window</th><th>Required Technical Conditions</th><th>System Action</th></tr>
+<tr><td>Entry Window A (Report Cycle)</td><td>8th to 10th of every month</td><td>RSI (14) &amp; Supertrend (100, 1.65) Cross, with Crude Gate aligned</td><td>Initiate Next Month Futures or Synthetic ATM Leg positions (Cycle A)</td></tr>
+<tr><td>Entry Window B (Catalyst Cycle)</td><td>21st to 26th of every month</td><td>RSI (14) &amp; Supertrend (100, 1.65) Cross, with Crude Gate aligned; check IVP</td><td>Initiate Next Month Futures or Synthetic ATM Leg positions (Cycle B)</td></tr>
+<tr><td>Technical Exit</td><td>Anytime post-entry</td><td>Supertrend Reversal Signal</td><td>Immediate Square-off of all active legs</td></tr>
+<tr><td>Calendar Hard Exit A</td><td>11th to 16th (after OPEC MOMR and IEA OMR are out)</td><td>Calendar Target Reached (regardless of indicators)</td><td>Mandatory Square-off of all Cycle A positions by the close of the 16th</td></tr>
+<tr><td>Calendar Hard Exit B</td><td>1st to 7th (after ATF revision and OPEC+ meeting)</td><td>Calendar Target Reached (regardless of indicators)</td><td>Mandatory Square-off of all Cycle B positions by the close of the first full session after the OPEC+ meeting, latest 7th</td></tr>
+<tr><td>No-Entry Zones</td><td>1st-7th, 11th-20th, 27th to month-end</td><td>Any signal in these dates</td><td>Signal ignored; no new orders</td></tr></table></div>
+<h2>2. FUTURE TRADE EXECUTION TIMELINE WORKFLOW</h2>
+<div class="g"><div class="b"><h4>1-7 CATALYST RELEASE</h4><p>No entry. Scale out after ATF revision + OPEC+ meeting. Cycle B hard exit.</p></div><div class="b"><h4>8-10 ENTRY WINDOW A</h4><p>Post-event reset. Crude Gate + RSI + ST cross.</p></div><div class="b"><h4>11-16 REPORT WINDOW</h4><p>Hold &amp; trail through OPEC / IEA reports. Cycle A hard exit.</p></div><div class="b"><h4>17-20 COOL-DOWN</h4><p>Flat. No entry. Re-read Crude Gate after WTI roll.</p></div><div class="b"><h4>21-26 ENTRY WINDOW B</h4><p>Pre-catalyst positioning. IVP check + RSI + ST cross.</p></div><div class="b"><h4>27-31 HOLD &amp; TRAIL</h4><p>No new entries. Trail ST into OPEC+ / ATF.</p></div></div>
+<h2>3. OIL UNIVERSE &amp; CRUDE REGIME GATE</h2>
+<div class="tw"><table><tr><th>Sector</th><th>Instruments (Next Month Futures / ATM Options)</th><th>Oil Sensitivity</th><th>Crude Bull Regime</th><th>Crude Bear Regime</th></tr>
+<tr><td>Upstream</td><td>ONGC, OIL India, Reliance (secondary proxy)</td><td>+0.75</td><td>LONG-eligible</td><td>SHORT-eligible</td></tr>
+<tr><td>Downstream</td><td>IOCL, BPCL, HPCL</td><td>-0.65</td><td>SHORT-eligible</td><td>LONG-eligible</td></tr>
+<tr><td>Aviation</td><td>InterGlobe Aviation (IndiGo), SpiceJet</td><td>-0.82</td><td>SHORT-eligible</td><td>LONG-eligible</td></tr>
+<tr><td>Paints</td><td>Asian Paints, Berger Paints, Kansai Nerolac</td><td>-0.58</td><td>SHORT-eligible</td><td>LONG-eligible</td></tr></table></div>
+<p class="note"><b>Crude Regime Gate:</b> Crude regime is read from Brent / MCX Crude on the 1h chart. Bull = Close above Supertrend (100, 1.65); Bear = Close below. A stock signal that conflicts with the regime is skipped. Confirm F&amp;O eligibility and lot sizes for every name before deployment.</p>
+<h2>4. DIRECT FUTURES TRADING SPECIFICATION</h2><p class="sub">Direct directional execution using single-leg Equity / Index Next Month Futures contracts across the oil value chain.</p>
+<div class="tw"><table><tr><th>Setup Mode</th><th>Entry Rule (Entry Window A: 8th-10th / B: 21st-26th)</th><th>Execution Action</th><th>Exit Rule</th></tr>
+<tr><td>Bullish Long Futures</td><td>RSI (14) &gt; 60 AND Close Cross Above Supertrend (100, 1.65) AND Crude Gate aligned</td><td>BUY Next Month Futures (NRML)</td><td>Close Cross Below Supertrend (100, 1.65) OR cycle hard exit (A: by 16th / B: by 7th)</td></tr>
+<tr><td>Bearish Short Futures</td><td>RSI (14) &lt; 40 AND Close Cross Below Supertrend (100, 1.65) AND Crude Gate aligned</td><td>SELL Next Month Futures (NRML)</td><td>Close Cross Above Supertrend (100, 1.65) OR cycle hard exit (A: by 16th / B: by 7th)</td></tr></table></div>
+<h2>5. SYNTHETIC FUTURE MULTI-LEG OPTIONS SPECIFICATION</h2><p class="sub">Synthetic strategy replicating underlying Futures payoff profiles using ATM Options.</p>
+<div class="tw"><table><tr><th>Strategy Mode</th><th>Leg Details</th><th>Option Type &amp; Strike</th><th>Entry Conditions (Window A / B)</th><th>Exit Conditions</th></tr>
+<tr><td>Synthetic Long Future (Bullish)</td><td>Leg 1: BUY<br>Leg 2: SELL</td><td>Call (CE) - ATM (Next Month)<br>Put (PE) - ATM (Next Month)</td><td>RSI (14) &gt; 60 AND Close Cross Above ST (100, 1.65) AND Crude Gate aligned</td><td>Close Cross Below ST (100, 1.65) OR cycle hard exit (A: by 16th / B: by 7th)</td></tr>
+<tr><td>Synthetic Short Future (Bearish)</td><td>Leg 1: BUY<br>Leg 2: SELL</td><td>Put (PE) - ATM (Next Month)<br>Call (CE) - ATM (Next Month)</td><td>RSI (14) &lt; 40 AND Close Cross Below ST (100, 1.65) AND Crude Gate aligned</td><td>Close Cross Above ST (100, 1.65) OR cycle hard exit (A: by 16th / B: by 7th)</td></tr></table></div>
+<h2>6. IMPLEMENTATION &amp; VERIFICATION CHECKLIST</h2>
+<ul><li>✓ <b>Simultaneous Leg Execution:</b> Ensure multi-leg options execute concurrently to prevent leg risk. Place the BUY leg first for hedge margin benefit, then the SELL leg in the same basket.*</li><li>✓ <b>Order Type Enforcement:</b> Enforce strict NRML overnight order routing. MIS is strictly prohibited.</li><li>✓ <b>Expiry Contract Handshake:</b> Always select Next Month Expiry contracts for both Futures and Options legs. NSE stock F&amp;O expire on the last Tuesday, so the current-month contract is never used.</li><li>✓ <b>Dual Exit Logic:</b> Program system handlers to trigger exits on whichever comes first: Supertrend cross signal OR the cycle's calendar hard exit (Cycle A by the 16th, Cycle B by the 7th).</li><li>✓ <b>Entry Window Lock:</b> Reject entry orders outside the 8th-10th and 21st-26th. Do not hold Cycle A and Cycle B positions in the same underlying at once.</li><li>✓ <b>Crude Gate Check:</b> Before every entry, confirm the Brent / MCX Crude 1h Supertrend regime matches the stock signal direction for that sector. Re-read after contract rolls.*</li><li>✓ <b>Leg-Failure Protocol:</b> If any leg fails to fill within the sync window, auto-flatten the filled leg and alert the operator.*</li><li>✓ <b>Liquidity Check:</b> Verify next-month OI and bid-ask on each futures and ATM option contract before entry.*</li></ul>
+<div class="b"><h4>Note</h4><p>Items marked * are oil-sector additions to the base auto-sector rulebook and should be validated in backtesting. The calendar windows are a design from the oil event calendar, not a proven edge. This document is a research framework, not investment advice; derivatives trading carries substantial risk of loss.</p></div>
+</section>
+
+<!-- 8 -->
+<section class="doc" data-t="Trading Framework Graphic">
+<h1>OIL SECTOR TRADING FRAMEWORK</h1><p class="sub"><b>FUNDAMENTAL + TECHNICAL + OPTIONS</b><br>Trade the News | Follow the Trend | Use the Right Strategy | Manage the Risk</p>
+<div class="g"><div class="b"><h4>TARGET STOCKS (NSE F&amp;O)</h4><p><b>UPSTREAM (E&amp;P):</b> ONGC, OIL (Oil India), RELIANCE (E&amp;P Segment)</p><p><b>DOWNSTREAM (RMC):</b> IOC, BPCL, HPCL (HINDPETRO)</p></div></div>
+<h2>1. FUNDAMENTAL DRIVERS &amp; CATALYST DATA</h2>
+<div class="g"><div class="b"><h4>CORE COMMODITY BENCHMARKS</h4><ul><li>Spot Brent &amp; WTI Crude. Direct 1:1 revenue correlation. Higher crude prices = higher realizations.</li><li>Relationship: Rising Crude = BULLISH; Falling Crude = BEARISH</li></ul></div>
+<div class="b"><h4>KEY SCHEDULED EVENTS</h4><ul><li>API Report (Tue 4:30 PM ET): Early inventory direction.</li><li>EIA Weekly Report (Wed 10:30 AM ET): Drawdown (&lt; Forecast) = Bullish; Build (&gt; Forecast) = Bearish</li><li>Baker Hughes Rigs (Fri 1:00 PM ET): Drilling capacity tracking.</li></ul></div></div>
+<h2>UPSTREAM vs DOWNSTREAM — COMPARATIVE PLAYBOOK</h2>
+<div class="g"><div class="b"><h4>UPSTREAM (ONGC, OIL, RELIANCE)</h4><ul><li>Crude Price Impact: Direct Positive (High Crude = High Profits)</li><li>Key Data: EIA Inventories, Brent Spot Price</li><li>Preferred Options: Buy Calls (low IVP post-EIA drawdown)</li></ul></div>
+<div class="b"><h4>DOWNSTREAM (IOC, BPCL, HPCL)</h4><ul><li>Crude Price Impact: Inverse Negative (High Crude = Margin Squeeze)</li><li>Key Data: Singapore GRM, Crack Spreads, Retail Price Controls</li><li>Preferred Options: Buy Puts (low IVP when crude surges)</li></ul></div></div>
+<h3>EVENT → TECHNICAL → OPTIONS FLOW</h3>
+<p><b>OIL EVENT</b> (API / EIA / RIGS, Fundamental Catalyst) → <b>TECHNICAL CONFIRMATION</b> (Indicators) → <b>IVP CHECK</b> (&gt;50 or &lt;50, Option Strategy Selection) → <b>EXECUTION</b> (Options / Futures, Entry &amp; SL)</p>
+<h2>TECHNICAL ANALYSIS — 3 DIFFERENT SYSTEMS (USE THE RIGHT ONE)</h2>
+<div class="g"><div class="b"><h4>1. OPTION BUYING (IVP &lt; 50)</h4><p>Buy Options When IVP is Low (Cheaper Options)</p><p><b>KEY INDICATORS:</b> IVP &lt; 50; Triple Supertrend (10,1), (11,2), (12,3); No RSI Required</p><p><b>ENTRY RULES</b></p><p><b>Bullish Setup:</b> All 3 Supertrends Green; Buy ATM Call / Bull Call Debit Spread</p><p><b>Bearish Setup:</b> All 3 Supertrends Red; Buy ATM Put / Bear Put Debit Spread</p><p><b>STRATEGY:</b> Use Triple Supertrend only (No RSI)</p></div>
+<div class="b"><h4>2. OPTION SELLING (IVP &gt; 50)</h4><p>Sell Premium When IVP is High (Expensive Options)</p><p><b>KEY INDICATORS:</b> IVP &gt; 50; RSI (14) &gt; 60 (Bullish), RSI (14) &lt; 40 (Bearish); Supertrend (100, 1.65) (Primary Trend &amp; Stop Loss)</p><p><b>ENTRY RULES</b></p><p><b>Bullish Setup:</b> RSI &gt; 60 + ST Green; Sell ATM Put / Bull Put Credit Spread</p><p><b>Bearish Setup:</b> RSI &lt; 40 + ST Red; Sell ATM Call / Bear Call Credit Spread</p><p><b>STRATEGY:</b> Use RSI + Supertrend (100, 1.65)</p></div>
+<div class="b"><h4>3. FUTURES TRADING (Bollinger Bands + RSI)</h4><p>Mean Reversion Strategy for Futures</p><p><b>KEY INDICATORS:</b> Bollinger Bands (20, 2); RSI (14) — 70/30 Levels</p><p><b>ENTRY RULES</b></p><p><b>Long (Buy Futures):</b> Price touches/pierces Lower BB + RSI &lt; 30 and hooks above 35; Target = 20 SMA</p><p><b>Short (Sell Futures):</b> Price touches/pierces Upper BB + RSI &gt; 70 and hooks below 65; Target = 20 SMA</p><p><b>STRATEGY:</b> Use Bollinger Bands + RSI (14)</p></div></div>
+<h2>OPTIONS EXECUTION MATRIX</h2>
+<div class="tw"><table><tr><th>Strategy</th><th>IVP Level</th><th>Technical Signal</th><th>Option Strategy</th></tr>
+<tr><td>Option Buying</td><td>&lt; 50 (Low Vol)</td><td>Triple Supertrend (10,1), (11,2), (12,3)</td><td>Buy Call / Put or Debit Spreads</td></tr>
+<tr><td>Option Selling</td><td>&gt; 50 (High Vol)</td><td>RSI (14) 60/40 + Supertrend (100,1.65)</td><td>Sell Premium or Credit Spreads</td></tr></table></div>
+<div class="g"><div class="b"><h4>OPTION STOP LOSS (DELTA METHOD)</h4><ul><li>Underlying Risk = | Current Price − Supertrend Level |</li><li>Option Risk = Underlying Risk × Option Delta</li><li>Final Option SL = Entry Premium ± (Underlying Risk × Delta)</li></ul><p>Add 5–10% Vega/Gamma Buffer for Major Events (Earnings / High Impact News)</p></div>
+<div class="b"><h4>RISK MANAGEMENT RULES</h4><ul><li><b>1. No Indicator, No Trade</b> – Fundamental creates watchlist, indicators give entry.</li><li><b>2. Defined Risk on Major Events</b> – Use Credit Spreads / Defined Risk Structures.</li><li><b>3. Vega/Gamma Buffer</b> – Add 5–10% on high-impact events.</li><li><b>4. Position Sizing</b> – Manage capital, avoid over-leverage.</li></ul></div>
+<div class="b"><h4>TRADE FLOW — FROM EVENT TO EXECUTION</h4><p>1. OIL EVENT (API / EIA / RIGS) Check global data → 2. TECHNICAL SIGNAL (RSI / Supertrend / BB) Confirm setup → 3. IVP CHECK (&gt;50 or &lt;50) Select strategy → 4. OPTION / FUTURES (Entry &amp; SL) Execute trade → 5. MANAGE &amp; EXIT (Harvest profits / Stop loss) Follow plan</p></div>
+<div class="b"><h4>KEY TAKEAWAYS</h4><ul><li>Use the right technical system for the right trade.</li><li>IVP decides Option Strategy (Buy or Sell).</li><li>Fundamentals drive direction, Technical gives timing.</li><li>Discipline + Risk Management = Consistent Results.</li></ul></div></div>
+<p class="sub"><b>OIL SECTOR | OPPORTUNITY IN VOLATILITY | TRADE SMART | STAY DISCIPLINED</b></p>
+</section>
+
+<!-- 9 -->
+<section class="doc" data-t="Synthetic Future Strategy">
+<h1>ALGORITHMIC TRADING SPECIFICATION DOCUMENT</h1><p class="sub"><b>SYNTHETIC FUTURE MULTI-LEG STRATEGY</b></p>
+<div class="chips"><div><b>PLATFORM</b>Streak / API</div><div><b>TIMEFRAME</b>1 Hour (1h)</div><div><b>STRATEGY TYPE</b>Multi-Leg Synthetic</div><div><b>UNDERLYING</b>Options (ATM)</div></div>
+<div class="b"><h4>DEVELOPER ARCHITECTURE NOTE</h4><p>This document defines two dual-leg directional strategies. A Synthetic Long Future replicates a long underlying position using ATM Call and Put options. A Synthetic Short Future replicates a short underlying position. All conditions apply strict AND logical operations for entry, and direct indicator thresholds for exit.</p></div>
+<h2>1. MULTI-LEG SETUP CONFIGURATION</h2>
+<div class="tw"><table><tr><th>STRATEGY MODE</th><th>LEG NUMBER</th><th>POSITION TYPE</th><th>OPTION TYPE</th><th>STRIKE SELECTION</th><th>EXPIRY</th></tr>
+<tr><td rowspan="2">Synthetic Long Future (Bullish Setup)</td><td>Leg 1</td><td>BUY</td><td>Call (CE)</td><td>At The Money (ATM)</td><td>Next Month</td></tr>
+<tr><td>Leg 2</td><td>SELL</td><td>Put (PE)</td><td>At The Money (ATM)</td><td>Next Month</td></tr>
+<tr><td rowspan="2">Synthetic Short Future</td><td>Leg 1</td><td>BUY</td><td>Put (PE)</td><td>At The Money (ATM)</td><td>Next Month</td></tr>
+<tr><td>Leg 2</td><td>SELL</td><td>Call (CE)</td><td>At The Money (ATM)</td><td>Next Month</td></tr></table></div>
+<h2>2. EXACT SIGNAL &amp; CONDITION RULES</h2>
+<div class="g"><div class="b"><h4>A. BULLISH SYNTHETIC LONG</h4><p><b>ENTRY CONDITIONS (ALL MUST BE TRUE):</b></p><ul><li>RSI (14, Close) HIGHER THAN 60</li><li>Close CROSSES ABOVE Supertrend (100, 1.65)</li></ul><p><b>EXIT CONDITION:</b> Close CROSSES BELOW Supertrend (100, 1.65)</p></div>
+<div class="b"><h4>B. BEARISH SYNTHETIC SHORT</h4><p><b>ENTRY CONDITIONS (ALL MUST BE TRUE):</b></p><ul><li>RSI (14, Close) LOWER THAN 40</li><li>Close CROSSES BELOW Supertrend (100, 1.65)</li></ul><p><b>EXIT CONDITION:</b> Close CROSSES ABOVE Supertrend (100, 1.65)</p></div></div>
+<h2>3. REQUIRED INDICATOR PARAMETERS</h2>
+<div class="tw"><table><tr><th>INDICATOR NAME</th><th>PRIMARY VARIABLE</th><th>SECONDARY VARIABLE / MULTIPLIER</th><th>APPLIED FIELD</th><th>STRATEGY THRESHOLDS</th></tr>
+<tr><td>Relative Strength Index (RSI)</td><td>Period: 14</td><td>N/A</td><td>Close Price</td><td>Bullish: &gt; 60<br>Bearish: &lt; 40</td></tr>
+<tr><td>Supertrend</td><td>Period: 100</td><td>Multiplier: 1.65</td><td>Close Price</td><td>Bullish: Close Cross Above<br>Bearish: Close Cross Below</td></tr></table></div>
+<h2>4. IMPLEMENTATION &amp; VERIFICATION CHECKLIST</h2>
+<h3>PRE-DEPLOYMENT VERIFICATION</h3>
+<ul><li>Ensure both multi-leg strategies execute legs simultaneously without execution delays between Call and Put legs.</li><li>Verify option contract selection is set specifically to Next Month Expiry and At The Money (ATM) strikes.</li><li>Confirm that Supertrend parameters are exact: Period = 100, Multiplier = 1.65.</li><li>Confirm RSI period is set to 14 with upper threshold at 60 and lower threshold at 40.</li><li>Ensure execution candles are strictly calculated on the 1 Hour (1h) timeframe.</li></ul>
+<p class="note">Synthetic Future Multi-Leg Strategy — Developer Document</p>
+</section>
+
+<!-- 10 -->
+<section class="doc" data-t="Oil Sector Quantitative Trading System Manual">
+<h1>OIL SECTOR QUANTITATIVE TRADING SYSTEM</h1><p class="sub"><b>TECHNICAL ARCHITECTURE &amp; PYTHON ALGORITHMIC ENGINE SPECIFICATION</b></p><div class="chips"><div><b>TARGET ASSET CLASS</b>Oil, Gas, Aviation &amp; Paints (NFO Futures &amp; Options)</div><div><b>PRIMARY UNIVERSE</b>ONGC, OIL, IOC, BPCL, HINDPETRO, INDIGO, ASIANPAINT (+ RELIANCE, SPICEJET, BERGEPAINT, KANSAINER)</div><div><b>TIMEFRAME / ROUTING</b>1-Hour (1h) / NRML Overnight</div><div><b>EXECUTION ENGINE</b>Python / REST API Multi-Leg Sync</div></div><h2>1. EXECUTIVE SUMMARY &amp; STRATEGY MATRIX</h2>
+<p>This specification details a fully systematic, non-discretionary trading framework for the Indian oil value chain: upstream (E&amp;P), downstream (refining / OMC), aviation and paints. Brent / MCX Crude creates the watchlist through a <b>Crude Regime Gate</b>; RSI (14) and the primary Supertrend (100, 1.65) on the stock's 1h chart provide 100% of the execution triggers; IV Percentile (IVP) selects the options structure; and the oil event calendar (OPEC / IEA reports, ATF revision, OPEC+ meeting) controls when entries and exits are allowed. Crude-divergence pair trades (Z-score mean reversion) run as a separate, non-calendar strategy.</p>
+
+<div class="tw"><table><tr><th>STRATEGY CLASS</th><th>IV REGIME (IVP)</th><th>DIRECTIONAL SIGNAL</th><th>EXECUTION STRUCTURE</th><th>PRIMARY EDGE SOURCE</th></tr><tr><td>Direct Futures</td><td>Any Regime</td><td>Bullish: RSI &gt; 60 &amp; Close crosses above ST(100, 1.65)<br/>Bearish: RSI &lt; 40 &amp; Close crosses below ST(100, 1.65)<br/>+ Crude Gate aligned</td><td>BUY / SELL Next Month Equity Futures (NRML)</td><td>Linear Directional Momentum &amp; Trend Capture</td></tr><tr><td>Synthetic Futures</td><td>Neutral / Any</td><td>Same triggers as Direct Futures</td><td>Bull: Long ATM CE + Short ATM PE<br/>Bear: Long ATM PE + Short ATM CE</td><td>Exact Futures Payoff Replication without Capital Drag</td></tr><tr><td>Volatility Selling</td><td>High IVP (&gt; 50)<br/>Options Premium High</td><td>Bullish: RSI &gt; 60 &amp; ST Green<br/>Bearish: RSI &lt; 40 &amp; ST Red</td><td>Bull: Sell ATM PE / Bull Put Credit Spread<br/>Bear: Sell ATM CE / Bear Call Credit Spread</td><td>Theta Time Decay + Vega Crush + Directional Delta</td></tr><tr><td>Volatility Buying</td><td>Low IVP (&lt; 50)<br/>Options Discounted</td><td>Bullish: RSI &gt; 60 &amp; Triple ST Green<br/>Bearish: RSI &lt; 40 &amp; Triple ST Red</td><td>Bull: Buy ATM CE / Bull Call Debit Spread<br/>Bear: Buy ATM PE / Bear Put Debit Spread</td><td>Gamma Acceleration + Volatility Expansion + Convexity</td></tr><tr><td>Pair Trades</td><td>VIX &gt; 20: spreads instead of futures</td><td>Z &gt; +2.0 (2.2 on ONGC/BPCL): Short Upstream / Long other<br/>Z &lt; -2.0: Long Upstream / Short other</td><td>Beta-neutral two-leg futures (or Bull Put + Bear Call spreads)</td><td>Mean Reversion of crude-driven sector mispricing</td></tr></table></div>
+<h2>2. UNIVERSE &amp; CRUDE REGIME GATE</h2>
+<p>The gate reads Brent / MCX Crude on the 1h chart: <b>BULL</b> when Close is above Supertrend (100, 1.65), <b>BEAR</b> when below. Upstream names follow crude; downstream, aviation and paints trade the inverse direction. A stock signal that conflicts with the regime is skipped (<code>SKIPPED_BY_CRUDE_GATE</code>).</p>
+
+<div class="tw"><table><tr><th>SECTOR</th><th>NSE SYMBOLS</th><th>OIL SENSITIVITY</th><th>CRUDE BULL REGIME</th><th>CRUDE BEAR REGIME</th></tr><tr><td>Upstream (E&amp;P)</td><td>ONGC, OIL, RELIANCE (secondary proxy)</td><td>+0.75</td><td>LONG-eligible only</td><td>SHORT-eligible only</td></tr><tr><td>Downstream (OMC)</td><td>IOC, BPCL, HINDPETRO</td><td>-0.65</td><td>SHORT-eligible only</td><td>LONG-eligible only</td></tr><tr><td>Aviation</td><td>INDIGO, SPICEJET</td><td>-0.82</td><td>SHORT-eligible only</td><td>LONG-eligible only</td></tr><tr><td>Paints</td><td>ASIANPAINT, BERGEPAINT, KANSAINER</td><td>-0.58</td><td>SHORT-eligible only</td><td>LONG-eligible only</td></tr></table></div>
+
+<p class="note">Confirm F&amp;O eligibility and lot sizes for every name (especially OIL, SPICEJET, BERGEPAINT, KANSAINER) before deployment; pass the verified list to the engine as <code>fno_list</code>. Reliance is an integrated name, so its crude beta is diluted.</p>
+<h2>3. MONTHLY EXECUTION CALENDAR &amp; CATALYST WINDOWS</h2>
+<p>Oil has two scheduled event clusters per month, so the system runs two non-overlapping cycles. <b>Cycle A (Report Cycle)</b> is anchored on the OPEC MOMR and IEA OMR; <b>Cycle B (Catalyst Cycle)</b> is anchored on the ATF revision (1st) and the OPEC+ meeting (usually 1st–6th, often a Sunday).</p>
+
+<div class="tw"><table><tr><th>DAYS</th><th>PHASE</th><th>SYSTEM RULE</th></tr><tr><td>01 – 07</td><td>CATALYST RELEASE (Cycle B)</td><td>No entry. Scale out 70%–80% after ATF revision + OPEC+ meeting; all Cycle B legs flat by close of the first full session after OPEC+ (latest the 7th).</td></tr><tr><td>08 – 10</td><td>ENTRY WINDOW A</td><td>Post-event reset. Crude Gate + RSI + ST cross. Initiate Next Month Futures or Synthetic ATM legs (Cycle A).</td></tr><tr><td>11 – 16</td><td>REPORT WINDOW (Cycle A)</td><td>Hold &amp; trail through OPEC MOMR / IEA OMR. Scale out right after both reports; all Cycle A legs flat by close of the 16th.</td></tr><tr><td>17 – 20</td><td>COOL-DOWN</td><td>Flat. No entry. Re-read the Crude Gate after the WTI roll (about the 20th–22nd).</td></tr><tr><td>21 – 26</td><td>ENTRY WINDOW B</td><td>Pre-catalyst positioning. IVP check + Crude Gate + RSI + ST cross. No entry on the NSE last-Tuesday expiry day.</td></tr><tr><td>27 – 31</td><td>HOLD &amp; TRAIL (Cycle B)</td><td>No new entries. Trail Supertrend into OPEC+ / ATF.</td></tr></table></div>
+
+<ul><li><b>Entry Window Lock:</b> a signal outside Window A (8th–10th) or Window B (21st–26th), on a non-trading day, or on the expiry day is ignored. No Cycle A and Cycle B position in the same underlying at once.</li><li><b>Dual Exit Logic:</b> Supertrend reversal OR the cycle's calendar hard exit, whichever comes first. The technical exit overrides the calendar.</li><li><b>Contract Handshake:</b> always the next-month contract (calendar month + 1). NSE stock F&amp;O expire on the last Tuesday, so the current-month contract is never used.</li><li><b>Holidays:</b> a window day that is a weekend or holiday is skipped; if a deadline falls on a non-session it rolls back to the last session before it. Windows are never extended.</li></ul>
+
+<p><b>Micro-Fundamental Edge &amp; Greek Translation Logic:</b> IV tends to build into the ATF / OPEC+ cluster (Cycle B) and collapse once decisions are public. Direct stop-loss management uses the underlying Supertrend translated through option delta: <code>Option Risk = | Spot − Supertrend | × Delta (0.50)</code>. Sold options stop above the entry premium; bought options stop below it.</p>
+<h2>4. ENGINE ARCHITECTURE</h2>
+<div class="tw"><table><tr><th>PART</th><th>COMPONENT</th><th>KEY METHODS</th><th>RESPONSIBILITY</th></tr><tr><td>1</td><td>Configuration &amp; data</td><td>OilConfig, Position, OrderLeg, UNIVERSE</td><td>All thresholds in one dataclass: RSI 60/40, ST (100, 1.65), IVP 50 / 70, windows, Z limits</td></tr><tr><td>2</td><td>Indicators, calendar, gate</td><td>calculate_rsi / supertrend / ivp, calendar_state, exit_plan, check_exit, read_crude_regime</td><td>Indicator maths, window logic, dual exit, crude regime and per-symbol allowed direction</td></tr><tr><td>3</td><td>Signal &amp; selector</td><td>generate_trading_signal, scan_universe, earnings_playbook</td><td>Calendar → technical → crude gate → IVP routing to futures / synthetic / options</td></tr><tr><td>4</td><td>Pair trades</td><td>pair_zscore, pair_signal, size_pair_legs, nifty_hedge_lots</td><td>Beta-weighted spread, Z entries and exits, beta-neutral sizing</td></tr><tr><td>5</td><td>Risk &amp; execution</td><td>calculate_option_stop_loss, build_basket, validate_legs, execute_basket, PaperBroker</td><td>Delta stop, NRML / next-month enforcement, BUY-first baskets, leg-failure flatten</td></tr></table></div>
+
+<p class="note">Supertrend direction convention (same as the Auto Sector manual): <code>-1</code> = Green / bullish, <code>+1</code> = Red / bearish, <code>0</code> = warm-up. Feed only <b>completed</b> 1h candles. Entries require a fresh cross on the last completed candle (<code>require_cross=True</code>); exits use the current Supertrend state so a reversal can never be missed.</p>
+
+<h2>5. ALGORITHMIC PYTHON ENGINE — UNIVERSE, CONFIGURATION & DATA STRUCTURES</h2>
+<p>Universe, sector sensitivities, the central configuration object and the position / order data structures.</p>
+
+<pre>import calendar
+import time
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+
+# Oil sensitivity by sector (positive = moves with crude, negative = inverse)
+SECTOR_SENSITIVITY = {
+    &quot;UPSTREAM&quot;: 0.75, &quot;DOWNSTREAM&quot;: -0.65, &quot;AVIATION&quot;: -0.82, &quot;PAINTS&quot;: -0.58,
+}
+# NSE symbols. Confirm F&amp;O eligibility and lot sizes on the live NSE list.
+UNIVERSE = {
+    &quot;ONGC&quot;: &quot;UPSTREAM&quot;, &quot;OIL&quot;: &quot;UPSTREAM&quot;, &quot;RELIANCE&quot;: &quot;UPSTREAM&quot;,
+    &quot;IOC&quot;: &quot;DOWNSTREAM&quot;, &quot;BPCL&quot;: &quot;DOWNSTREAM&quot;, &quot;HINDPETRO&quot;: &quot;DOWNSTREAM&quot;,
+    &quot;INDIGO&quot;: &quot;AVIATION&quot;, &quot;SPICEJET&quot;: &quot;AVIATION&quot;,
+    &quot;ASIANPAINT&quot;: &quot;PAINTS&quot;, &quot;BERGEPAINT&quot;: &quot;PAINTS&quot;, &quot;KANSAINER&quot;: &quot;PAINTS&quot;,
+}
+SECONDARY_PROXIES = {&quot;RELIANCE&quot;}      # integrated name, diluted crude beta
+CORE_PAIRS = {(&quot;ONGC&quot;, &quot;BPCL&quot;)}       # pairs that use the stricter |Z| 2.2 rule
+
+
+@dataclass
+class OilConfig:
+    rsi_period: int = 14
+    rsi_bull: float = 60.0
+    rsi_bear: float = 40.0
+    st_period: int = 100              # primary Supertrend (stock and crude)
+    st_mult: float = 1.65
+    triple_st: tuple = ((10, 1.0), (11, 2.0), (12, 3.0))
+    ivp_split: float = 50.0           # &gt; 50 sell premium, &lt; 50 buy premium
+    ivp_earnings_min: float = 70.0    # credit spreads into results only above this
+    delta_atm: float = 0.50
+    earnings_buffer: float = 0.10     # 5%-10% Vega/Gamma buffer
+    entry_a: tuple = (8, 10)          # Cycle A: report cycle
+    entry_b: tuple = (21, 26)         # Cycle B: catalyst cycle
+    hard_exit_a_day: int = 16         # Cycle A flat by close of the 16th
+    hard_exit_b_day: int = 7          # Cycle B flat by the 7th at the latest
+    scale_out_fraction: float = 0.75  # 70%-80% harvested right after the release
+    require_cross: bool = True        # entry needs a fresh Supertrend cross
+    z_window: int = 60
+    z_entry: float = 2.0
+    z_entry_core: float = 2.2
+    z_exit: float = 0.5
+    z_stop: float = 3.5
+    pair_max_days: int = 15
+    vix_hedge_level: float = 20.0
+    product: str = &quot;NRML&quot;
+
+
+@dataclass
+class Position:
+    symbol: str
+    side: str                         # &quot;LONG&quot; or &quot;SHORT&quot;
+    cycle: str                        # &quot;A&quot; or &quot;B&quot;
+    entry_date: date
+    scaled_out: bool = False
+
+
+@dataclass
+class OrderLeg:
+    symbol: str
+    instrument: str                   # &quot;FUT&quot;, &quot;CE&quot; or &quot;PE&quot;
+    side: str                         # &quot;BUY&quot; or &quot;SELL&quot;
+    qty: int
+    expiry_year: int
+    expiry_month: int
+    strike: Optional[float] = None
+    product: str = &quot;NRML&quot;
+    order_type: str = &quot;MARKET&quot;</pre>
+
+<h2>6. ALGORITHMIC PYTHON ENGINE — INDICATORS, CALENDAR ENGINE & CRUDE REGIME GATE</h2>
+<p>Core indicators (RSI, Supertrend, IVP, Triple Supertrend), the trading calendar with Cycle A / B windows and exit plans, the dual-exit checker and the Crude Regime Gate. This part opens the <code>OilSectorQuantEngine</code> class; Parts 3–5 continue the same class.</p>
+
+<pre>class OilSectorQuantEngine:
+    &quot;&quot;&quot;Oil, Gas, Aviation &amp; Paints engine. 1h candles, NRML, next-month expiry.
+    Pass COMPLETED 1h candles only (columns: open, high, low, close).&quot;&quot;&quot;
+
+    def __init__(self, config=None, holidays=None, fno_list=None):
+        self.cfg = config or OilConfig()
+        self.holidays = set(holidays or [])
+        self.watchlist = [s for s in UNIVERSE if fno_list is None or s in fno_list]
+
+    # ---------- indicators ----------
+    def calculate_rsi(self, df, period=14):
+        delta = df[&quot;close&quot;].diff()
+        gain = delta.where(delta &gt; 0, 0).rolling(window=period).mean()
+        loss = (-delta.where(delta &lt; 0, 0)).rolling(window=period).mean()
+        rs = gain / loss.replace(0, np.nan)
+        return (100 - (100 / (1 + rs))).fillna(50)
+
+    def calculate_supertrend(self, df, period=100, multiplier=1.65):
+        &quot;&quot;&quot;Returns (supertrend_line, direction). direction: -1 = Green (bullish),
+        +1 = Red (bearish), 0 = warm-up. Same convention as the Auto Sector manual.&quot;&quot;&quot;
+        high, low, close = df[&quot;high&quot;], df[&quot;low&quot;], df[&quot;close&quot;]
+        prev_close = close.shift(1)
+        tr = pd.concat([high - low, (high - prev_close).abs(),
+                        (low - prev_close).abs()], axis=1).max(axis=1)
+        atr = tr.rolling(window=period).mean()
+        hl2 = (high + low) / 2
+        b_ub = (hl2 + multiplier * atr).to_numpy()
+        b_lb = (hl2 - multiplier * atr).to_numpy()
+        c, mid, n = close.to_numpy(), hl2.to_numpy(), len(df)
+        f_ub, f_lb = np.full(n, np.nan), np.full(n, np.nan)
+        st, direction = np.full(n, np.nan), np.zeros(n, dtype=int)
+        first = period - 1
+        if n &lt;= first:
+            return pd.Series(st, index=df.index), pd.Series(direction, index=df.index)
+        f_ub[first], f_lb[first] = b_ub[first], b_lb[first]
+        direction[first] = -1 if c[first] &gt; mid[first] else 1
+        st[first] = f_lb[first] if direction[first] == -1 else f_ub[first]
+        for i in range(first + 1, n):
+            f_ub[i] = b_ub[i] if (b_ub[i] &lt; f_ub[i - 1] or c[i - 1] &gt; f_ub[i - 1]) else f_ub[i - 1]
+            f_lb[i] = b_lb[i] if (b_lb[i] &gt; f_lb[i - 1] or c[i - 1] &lt; f_lb[i - 1]) else f_lb[i - 1]
+            if direction[i - 1] == 1:
+                direction[i] = -1 if c[i] &gt; f_ub[i] else 1
+            else:
+                direction[i] = 1 if c[i] &lt; f_lb[i] else -1
+            st[i] = f_lb[i] if direction[i] == -1 else f_ub[i]
+        return pd.Series(st, index=df.index), pd.Series(direction, index=df.index)
+
+    def evaluate_triple_supertrend(self, df):
+        dirs = [self.calculate_supertrend(df, p, m)[1].iloc[-1] for p, m in self.cfg.triple_st]
+        return all(d == -1 for d in dirs), all(d == 1 for d in dirs)
+
+    def calculate_ivp(self, current_iv, iv_history_52wk):
+        low_iv, high_iv = np.min(iv_history_52wk), np.max(iv_history_52wk)
+        if high_iv == low_iv:
+            return 50.0
+        return float(((current_iv - low_iv) / (high_iv - low_iv)) * 100.0)
+
+    # ---------- trading calendar ----------
+    @staticmethod
+    def last_tuesday(year, month):
+        d = date(year, month, calendar.monthrange(year, month)[1])
+        while d.weekday() != 1:
+            d -= timedelta(days=1)
+        return d
+
+    def is_trading_day(self, d):
+        return d.weekday() &lt; 5 and d not in self.holidays
+
+    def _prev_trading_day(self, d):
+        while not self.is_trading_day(d):
+            d -= timedelta(days=1)
+        return d
+
+    def _next_trading_day(self, d, strict=False):
+        if strict:
+            d += timedelta(days=1)
+        while not self.is_trading_day(d):
+            d += timedelta(days=1)
+        return d
+
+    @staticmethod
+    def next_month(d):
+        return (d.year + (d.month == 12), d.month % 12 + 1)
+
+    def calendar_state(self, d, expiry_dates=None):
+        &quot;&quot;&quot;Phase, cycle and entry permission for a date (see calendar manual).&quot;&quot;&quot;
+        c, day = self.cfg, d.day
+        if day &lt;= 7:
+            phase, cycle = &quot;CATALYST_RELEASE&quot;, &quot;B&quot;
+        elif c.entry_a[0] &lt;= day &lt;= c.entry_a[1]:
+            phase, cycle = &quot;ENTRY_WINDOW_A&quot;, &quot;A&quot;
+        elif day &lt;= c.hard_exit_a_day:
+            phase, cycle = &quot;REPORT_WINDOW&quot;, &quot;A&quot;
+        elif day &lt; c.entry_b[0]:
+            phase, cycle = &quot;COOL_DOWN&quot;, None
+        elif day &lt;= c.entry_b[1]:
+            phase, cycle = &quot;ENTRY_WINDOW_B&quot;, &quot;B&quot;
+        else:
+            phase, cycle = &quot;HOLD_AND_TRAIL&quot;, &quot;B&quot;
+        expiry = (expiry_dates or {}).get((d.year, d.month), self.last_tuesday(d.year, d.month))
+        entry_ok = (phase.startswith(&quot;ENTRY_WINDOW&quot;) and self.is_trading_day(d) and d != expiry)
+        return {&quot;phase&quot;: phase, &quot;cycle&quot;: cycle, &quot;entry_allowed&quot;: entry_ok}
+
+    def exit_plan(self, cycle, entry_date, events=None):
+        &quot;&quot;&quot;Scale-out date and final hard-exit deadline. events keys (date values):
+        &#x27;opec_plus&#x27;, &#x27;opec_momr&#x27;, &#x27;iea_omr&#x27;.&quot;&quot;&quot;
+        events, c = events or {}, self.cfg
+        if cycle == &quot;A&quot;:
+            deadline = self._prev_trading_day(
+                date(entry_date.year, entry_date.month, c.hard_exit_a_day))
+            reports = [events[k] for k in (&quot;opec_momr&quot;, &quot;iea_omr&quot;) if events.get(k)]
+            scale = self._next_trading_day(max(reports), strict=True) if reports else deadline
+            scale = min(scale, deadline)
+        else:
+            y, m = self.next_month(entry_date)
+            cap = self._prev_trading_day(date(y, m, c.hard_exit_b_day))
+            meet = events.get(&quot;opec_plus&quot;)
+            deadline = min(self._next_trading_day(meet, strict=True), cap) if meet else cap
+            scale = deadline
+        return {&quot;scale_out_date&quot;: scale, &quot;deadline&quot;: deadline,
+                &quot;scale_fraction&quot;: c.scale_out_fraction}
+
+    def check_exit(self, pos, df, today, events=None):
+        &quot;&quot;&quot;Dual exit logic: Supertrend reversal OR calendar hard exit, whichever is first.&quot;&quot;&quot;
+        _, d = self.calculate_supertrend(df, self.cfg.st_period, self.cfg.st_mult)
+        last = d.iloc[-1]
+        if (pos.side == &quot;LONG&quot; and last == 1) or (pos.side == &quot;SHORT&quot; and last == -1):
+            return {&quot;action&quot;: &quot;EXIT_ALL&quot;, &quot;reason&quot;: &quot;Supertrend reversal (overrides calendar)&quot;}
+        plan = self.exit_plan(pos.cycle, pos.entry_date, events)
+        if today &gt; plan[&quot;deadline&quot;]:
+            return {&quot;action&quot;: &quot;EXIT_ALL&quot;, &quot;reason&quot;: &quot;Calendar hard exit overdue&quot;}
+        if today &gt;= plan[&quot;scale_out_date&quot;] and not pos.scaled_out:
+            return {&quot;action&quot;: &quot;SCALE_OUT&quot;, &quot;fraction&quot;: plan[&quot;scale_fraction&quot;],
+                    &quot;flatten_by_close&quot;: today &gt;= plan[&quot;deadline&quot;]}
+        if today &gt;= plan[&quot;deadline&quot;]:
+            return {&quot;action&quot;: &quot;EXIT_ALL&quot;, &quot;reason&quot;: &quot;Calendar hard exit by close&quot;}
+        return {&quot;action&quot;: &quot;HOLD&quot;}
+
+    # ---------- crude regime gate ----------
+    def read_crude_regime(self, crude_df):
+        &quot;&quot;&quot;Brent / MCX Crude 1h: Close above Supertrend = BULL, below = BEAR.&quot;&quot;&quot;
+        _, d = self.calculate_supertrend(crude_df, self.cfg.st_period, self.cfg.st_mult)
+        last = d.iloc[-1]
+        return &quot;BULL&quot; if last == -1 else &quot;BEAR&quot; if last == 1 else &quot;UNKNOWN&quot;
+
+    def gate_direction(self, symbol, regime):
+        &quot;&quot;&quot;The only direction a symbol may trade under the current crude regime.&quot;&quot;&quot;
+        if regime not in (&quot;BULL&quot;, &quot;BEAR&quot;):
+            return None
+        follows_crude = SECTOR_SENSITIVITY[UNIVERSE[symbol]] &gt; 0
+        return &quot;BULLISH&quot; if (regime == &quot;BULL&quot;) == follows_crude else &quot;BEARISH&quot;</pre>
+
+<h2>7. ALGORITHMIC PYTHON ENGINE — SIGNAL ENGINE & STRATEGY SELECTOR</h2>
+<p>The decision tree: calendar gatekeeper, RSI + Supertrend triggers, crude gate, IVP-based strategy selection, results-date and Wednesday safeguards, and the quarterly earnings playbook.</p>
+
+<pre>    def generate_trading_signal(self, symbol, df, crude_df, current_iv, iv_history, now,
+                                events=None, results_date=None, open_positions=None):
+        c = self.cfg
+        if symbol not in self.watchlist:
+            return {&quot;symbol&quot;: symbol, &quot;action&quot;: &quot;NOT_IN_UNIVERSE&quot;}
+        cal = self.calendar_state(now.date())
+        sig = {&quot;symbol&quot;: symbol, &quot;timestamp&quot;: now, &quot;phase&quot;: cal[&quot;phase&quot;], &quot;cycle&quot;: cal[&quot;cycle&quot;]}
+
+        # 1) Calendar gatekeeper: no entry outside Window A / B
+        if not cal[&quot;entry_allowed&quot;]:
+            sig.update(action=&quot;STANDBY&quot;, reason=&quot;Outside entry window or expiry day&quot;)
+            return sig
+        if any(p.symbol == symbol for p in (open_positions or [])):
+            sig.update(action=&quot;BLOCKED&quot;, reason=&quot;Open position exists (no A/B overlap)&quot;)
+            return sig
+
+        # 2) Technical triggers on the stock chart
+        if len(df) &lt; c.st_period + 2:
+            sig.update(action=&quot;INSUFFICIENT_DATA&quot;)
+            return sig
+        rsi = self.calculate_rsi(df, c.rsi_period).iloc[-1]
+        st, direction = self.calculate_supertrend(df, c.st_period, c.st_mult)
+        now_dir, prev_dir = direction.iloc[-1], direction.iloc[-2]
+        bull = rsi &gt; c.rsi_bull and now_dir == -1 and (prev_dir == 1 or not c.require_cross)
+        bear = rsi &lt; c.rsi_bear and now_dir == 1 and (prev_dir == -1 or not c.require_cross)
+        if not (bull or bear):
+            sig.update(action=&quot;NO_TRADE_SETUP&quot;, rsi=round(float(rsi), 2))
+            return sig
+        side = &quot;BULLISH&quot; if bull else &quot;BEARISH&quot;
+
+        # 3) Crude gate: conflicting signals are skipped
+        regime = self.read_crude_regime(crude_df)
+        sig.update(crude_regime=regime, direction=side)
+        if self.gate_direction(symbol, regime) != side:
+            sig.update(action=&quot;SKIPPED_BY_CRUDE_GATE&quot;)
+            return sig
+
+        # 4) Event, volatility and sizing context
+        ivp = self.calculate_ivp(current_iv, iv_history)
+        triple_green, triple_red = self.evaluate_triple_supertrend(df)
+        plan = self.exit_plan(cal[&quot;cycle&quot;], now.date(), events)
+        results_in_hold = bool(results_date and now.date() &lt;= results_date &lt;= plan[&quot;deadline&quot;])
+        naked_ok = cal[&quot;cycle&quot;] == &quot;B&quot; and not results_in_hold   # naked only in catalyst window
+        wednesday = now.weekday() == 2                           # EIA gap lands Thursday open
+        sig.update(action=&quot;ENTRY_SIGNAL&quot;, spot=float(df[&quot;close&quot;].iloc[-1]),
+                   st_stop=float(st.iloc[-1]), rsi=round(float(rsi), 2), ivp=round(ivp, 1),
+                   naked_allowed=naked_ok, size_factor=0.5 if wednesday else 1.0,
+                   exit_plan=plan, notes=[])
+
+        # 5) Routing: direct futures, synthetic futures, then volatility selector
+        if bull:
+            sig[&quot;futures_action&quot;] = &quot;BUY_NEXT_MONTH_FUTURES_NRML&quot;
+            sig[&quot;synthetic_action&quot;] = [&quot;BUY_ATM_CE_NEXT_MONTH&quot;, &quot;SELL_ATM_PE_NEXT_MONTH&quot;]
+            sell_name = &quot;SELL_ATM_PUT_OR_BULL_PUT_CREDIT_SPREAD&quot; if naked_ok else &quot;BULL_PUT_CREDIT_SPREAD&quot;
+            buy_name, buy_ok = &quot;BUY_ATM_CALL_OR_BULL_CALL_DEBIT_SPREAD&quot;, triple_green
+        else:
+            sig[&quot;futures_action&quot;] = &quot;SELL_NEXT_MONTH_FUTURES_NRML&quot;
+            sig[&quot;synthetic_action&quot;] = [&quot;BUY_ATM_PE_NEXT_MONTH&quot;, &quot;SELL_ATM_CE_NEXT_MONTH&quot;]
+            sell_name = &quot;SELL_ATM_CALL_OR_BEAR_CALL_CREDIT_SPREAD&quot; if naked_ok else &quot;BEAR_CALL_CREDIT_SPREAD&quot;
+            buy_name, buy_ok = &quot;BUY_ATM_PUT_OR_BEAR_PUT_DEBIT_SPREAD&quot;, triple_red
+        if ivp &gt; c.ivp_split:
+            sig[&quot;options_strategy&quot;] = sell_name
+            sig[&quot;edge&quot;] = &quot;Vega Collapse + Theta Decay + Delta&quot;
+        else:
+            sig[&quot;options_strategy&quot;] = buy_name if buy_ok else &quot;WAIT_FOR_TRIPLE_ST_CONFIRMATION&quot;
+            sig[&quot;edge&quot;] = &quot;Gamma Acceleration + Convexity&quot;
+
+        if results_in_hold:
+            sig[&quot;synthetic_action&quot;] = None
+            sig[&quot;notes&quot;].append(&quot;Results inside hold: synthetic (naked short leg) blocked; &quot;
+                                &quot;futures follow Supertrend/calendar; use defined-risk spreads.&quot;)
+        if wednesday:
+            sig[&quot;notes&quot;].append(&quot;Wednesday: halve size on short-option legs or use spreads.&quot;)
+        sig[&quot;notes&quot;].append(&quot;Crude trades while NSE is shut: stops cannot protect opening gaps.&quot;)
+        return sig
+
+    def scan_universe(self, data, crude_df, now, iv_inputs, **kw):
+        &quot;&quot;&quot;data: {symbol: df}; iv_inputs: {symbol: (current_iv, iv_history_52wk)}.&quot;&quot;&quot;
+        out = []
+        for sym in self.watchlist:
+            if sym in data and sym in iv_inputs:
+                out.append(self.generate_trading_signal(
+                    sym, data[sym], crude_df, iv_inputs[sym][0], iv_inputs[sym][1], now, **kw))
+        return out
+
+    def earnings_playbook(self, days_to_results, ivp, ivp_rising):
+        &quot;&quot;&quot;Quarterly overlay. days_to_results in calendar days.&quot;&quot;&quot;
+        if days_to_results &lt;= 1 and days_to_results &gt;= 0:
+            return {&quot;action&quot;: &quot;EXIT_PRE_RUNUP_LONGS&quot;, &quot;naked_selling&quot;: &quot;FORBIDDEN&quot;}
+        if 1 &lt; days_to_results &lt;= 2:
+            if ivp &gt; self.cfg.ivp_earnings_min:
+                return {&quot;action&quot;: &quot;SELL_DEFINED_RISK_CREDIT_SPREAD&quot;, &quot;naked_selling&quot;: &quot;FORBIDDEN&quot;}
+            return {&quot;action&quot;: &quot;NO_TRADE&quot;, &quot;reason&quot;: &quot;IVP not above 70&quot;}
+        if 7 &lt;= days_to_results &lt;= 10 and ivp_rising:
+            return {&quot;action&quot;: &quot;BUY_OPTIONS_ON_RISING_IVP&quot;, &quot;exit&quot;: &quot;1 day before results&quot;}
+        return {&quot;action&quot;: &quot;NO_EARNINGS_PLAY&quot;}</pre>
+
+<h2>8. ALGORITHMIC PYTHON ENGINE — CRUDE-DIVERGENCE PAIR TRADES (MEAN REVERSION)</h2>
+<p>Strategy 3. Spread = Upstream − β × Other, Z-score on a 60-day window, entries beyond |Z| 2.0 (2.2 for ONGC / BPCL), exit at |Z| ≤ 0.5, 15 trading days or an extreme-Z stop beyond 3.5.</p>
+
+<pre>    def pair_zscore(self, up_close, other_close):
+        &quot;&quot;&quot;Spread = Upstream - beta x Other, Z against the trailing 60-day mean and sigma.&quot;&quot;&quot;
+        w = self.cfg.z_window
+        both = pd.concat([up_close, other_close], axis=1, join=&quot;inner&quot;).dropna().iloc[-w:]
+        if len(both) &lt; w:
+            return None
+        y, x = both.iloc[:, 0], both.iloc[:, 1]
+        beta = float(np.cov(y, x, ddof=1)[0, 1] / np.var(x, ddof=1))
+        spread = y - beta * x
+        sigma = spread.std(ddof=1)
+        if sigma == 0 or np.isnan(sigma):
+            return None
+        return {&quot;beta&quot;: beta, &quot;z&quot;: float((spread.iloc[-1] - spread.mean()) / sigma)}
+
+    def pair_signal(self, up_sym, other_sym, up_close, other_close, vix,
+                    open_pair=None, open_positions=None):
+        &quot;&quot;&quot;open_pair: {&#x27;direction&#x27;: &#x27;LONG_SPREAD&#x27;|&#x27;SHORT_SPREAD&#x27;, &#x27;days_held&#x27;: int}.
+        open_positions: {symbol: &#x27;BULLISH&#x27;|&#x27;BEARISH&#x27;} from Strategy 1 / 2.&quot;&quot;&quot;
+        c = self.cfg
+        zr = self.pair_zscore(up_close, other_close)
+        if zr is None:
+            return {&quot;action&quot;: &quot;INSUFFICIENT_DATA&quot;}
+        z, beta = zr[&quot;z&quot;], zr[&quot;beta&quot;]
+        out = {&quot;pair&quot;: (up_sym, other_sym), &quot;z&quot;: round(z, 2), &quot;beta&quot;: round(beta, 3)}
+        if open_pair:                                       # exit logic for a live pair
+            if abs(z) &gt; c.z_stop:
+                return {**out, &quot;action&quot;: &quot;STOP_OUT&quot;, &quot;reason&quot;: &quot;|Z| &gt; 3.5: trend, not reversion&quot;}
+            if abs(z) &lt;= c.z_exit:
+                return {**out, &quot;action&quot;: &quot;EXIT_TARGET&quot;, &quot;reason&quot;: &quot;Z back inside +/-0.5&quot;}
+            if open_pair[&quot;days_held&quot;] &gt;= c.pair_max_days:
+                return {**out, &quot;action&quot;: &quot;EXIT_TIME&quot;, &quot;reason&quot;: &quot;15 trading days&quot;}
+            return {**out, &quot;action&quot;: &quot;HOLD&quot;}
+        thr = c.z_entry_core if (up_sym, other_sym) in CORE_PAIRS else c.z_entry
+        if abs(z) &gt; c.z_stop:
+            return {**out, &quot;action&quot;: &quot;NO_ENTRY&quot;, &quot;reason&quot;: &quot;|Z| beyond 3.5&quot;}
+        if abs(z) &lt; thr:
+            return {**out, &quot;action&quot;: &quot;NO_TRADE_SETUP&quot;, &quot;threshold&quot;: thr}
+        short_spread = z &gt; 0                                # rich upstream vs the other leg
+        long_leg, short_leg = (other_sym, up_sym) if short_spread else (up_sym, other_sym)
+        for sym, bias in (open_positions or {}).items():   # no opposing Strategy 1 exposure
+            if (sym == long_leg and bias == &quot;BEARISH&quot;) or (sym == short_leg and bias == &quot;BULLISH&quot;):
+                return {**out, &quot;action&quot;: &quot;BLOCKED&quot;, &quot;reason&quot;: f&quot;Opposite Strategy 1 in {sym}&quot;}
+        out.update(action=&quot;ENTRY_SIGNAL&quot;,
+                   direction=&quot;SHORT_SPREAD&quot; if short_spread else &quot;LONG_SPREAD&quot;,
+                   long_leg=long_leg, short_leg=short_leg, threshold=thr)
+        if vix &gt; c.vix_hedge_level:
+            out[&quot;structure&quot;] = {long_leg: &quot;BULL_PUT_SPREAD&quot;, short_leg: &quot;BEAR_CALL_SPREAD&quot;}
+        else:
+            out[&quot;structure&quot;] = {long_leg: &quot;BUY_FUT_NRML&quot;, short_leg: &quot;SELL_FUT_NRML&quot;}
+        return out
+
+    @staticmethod
+    def size_pair_legs(price_up, lot_up, price_other, lot_other, beta, lots_up=1, mode=&quot;cash&quot;):
+        &quot;&quot;&quot;Beta-neutral sizing. mode &#x27;cash&#x27; = equal rupee value; &#x27;beta&#x27; = beta shares.&quot;&quot;&quot;
+        shares_up = lots_up * lot_up
+        if mode == &quot;cash&quot;:
+            target = shares_up * price_up / price_other
+        else:
+            target = shares_up * beta
+        return {&quot;lots_up&quot;: lots_up, &quot;lots_other&quot;: max(1, int(round(target / lot_other)))}
+
+    @staticmethod
+    def nifty_hedge_lots(residual_beta_value, nifty_price, nifty_lot):
+        &quot;&quot;&quot;Positive residual market exposure (Rs) -&gt; negative lots (sell Nifty futures).&quot;&quot;&quot;
+        return -int(round(residual_beta_value / (nifty_price * nifty_lot)))</pre>
+
+<h2>9. ALGORITHMIC PYTHON ENGINE — GREEK RISK, ORDER ROUTER & LEG-FAILURE PROTOCOL</h2>
+<p>Delta-translated option stop loss, basket construction, NRML and next-month validation, BUY-first multi-leg execution and the leg-failure protocol, plus a paper broker for testing.</p>
+
+<pre>    def calculate_option_stop_loss(self, spot, supertrend, premium, delta=None,
+                                   is_sold=False, is_earnings=False):
+        &quot;&quot;&quot;Delta translation. Sold option: stop ABOVE entry premium; bought: BELOW.&quot;&quot;&quot;
+        delta = self.cfg.delta_atm if delta is None else delta
+        risk = abs(spot - supertrend) * delta
+        if is_earnings:
+            risk *= 1 + self.cfg.earnings_buffer       # 5%-10% Vega/Gamma buffer
+        stop = premium + risk if is_sold else max(0.10, premium - risk)
+        return round(stop, 2)
+
+    @staticmethod
+    def atm_strike(spot, strike_step):
+        return round(spot / strike_step) * strike_step
+
+    def build_basket(self, sig, symbol, lot_size, lots, strike_step, structure=&quot;FUTURES&quot;):
+        &quot;&quot;&quot;Turn an ENTRY_SIGNAL into order legs. BUY legs are listed first.&quot;&quot;&quot;
+        now = sig[&quot;timestamp&quot;]
+        y, m = self.next_month(now.date())
+        qty = int(lots * lot_size * sig.get(&quot;size_factor&quot;, 1.0))
+        qty = max(lot_size, qty - qty % lot_size)
+        bull = sig[&quot;direction&quot;] == &quot;BULLISH&quot;
+        if structure == &quot;FUTURES&quot;:
+            return [OrderLeg(symbol, &quot;FUT&quot;, &quot;BUY&quot; if bull else &quot;SELL&quot;, qty, y, m)]
+        if structure == &quot;SYNTHETIC&quot;:
+            if not sig.get(&quot;synthetic_action&quot;):
+                raise ValueError(&quot;Synthetic blocked for this signal&quot;)
+            k = self.atm_strike(sig[&quot;spot&quot;], strike_step)
+            if bull:
+                return [OrderLeg(symbol, &quot;CE&quot;, &quot;BUY&quot;, qty, y, m, k),
+                        OrderLeg(symbol, &quot;PE&quot;, &quot;SELL&quot;, qty, y, m, k)]
+            return [OrderLeg(symbol, &quot;PE&quot;, &quot;BUY&quot;, qty, y, m, k),
+                    OrderLeg(symbol, &quot;CE&quot;, &quot;SELL&quot;, qty, y, m, k)]
+        raise ValueError(&quot;structure must be FUTURES or SYNTHETIC&quot;)
+
+    def validate_legs(self, legs, today):
+        y, m = self.next_month(today)
+        for leg in legs:
+            if leg.product != self.cfg.product:
+                raise ValueError(f&quot;{leg.product} blocked: only NRML allowed (MIS forbidden)&quot;)
+            if (leg.expiry_year, leg.expiry_month) != (y, m):
+                raise ValueError(&quot;Only next-month expiry contracts may be traded&quot;)
+
+    def execute_basket(self, broker, legs, today, sync_window_sec=5.0, alert=print):
+        &quot;&quot;&quot;BUY leg first, then SELL, inside one sync window. Any failure -&gt; flatten fills.&quot;&quot;&quot;
+        self.validate_legs(legs, today)
+        ordered = sorted(legs, key=lambda l: 0 if l.side == &quot;BUY&quot; else 1)
+        filled, t0 = [], time.monotonic()
+        for leg in ordered:
+            res = broker.place_order(leg)
+            late = (time.monotonic() - t0) &gt; sync_window_sec
+            if res.get(&quot;status&quot;) == &quot;FILLED&quot; and not late:
+                filled.append(leg)
+                continue
+            alert(f&quot;LEG FAILURE on {leg.symbol} {leg.instrument} {leg.side}: flattening&quot;)
+            for f in filled:
+                flat = OrderLeg(f.symbol, f.instrument, &quot;SELL&quot; if f.side == &quot;BUY&quot; else &quot;BUY&quot;,
+                                f.qty, f.expiry_year, f.expiry_month, f.strike)
+                broker.place_order(flat)
+            return {&quot;status&quot;: &quot;ABORTED_FLATTENED&quot;, &quot;failed_leg&quot;: leg}
+        return {&quot;status&quot;: &quot;FILLED&quot;, &quot;legs&quot;: ordered}
+
+
+class PaperBroker:
+    &quot;&quot;&quot;Test double. Replace with a Streak / broker REST wrapper exposing place_order(leg).&quot;&quot;&quot;
+
+    def __init__(self, reject=None):
+        self.log, self.reject = [], set(reject or [])
+
+    def place_order(self, leg):
+        self.log.append(leg)
+        ok = (leg.symbol, leg.instrument, leg.side) not in self.reject
+        return {&quot;status&quot;: &quot;FILLED&quot; if ok else &quot;REJECTED&quot;}</pre>
+
+<h2>10. SMOKE-TEST RESULTS</h2>
+<p>The engine above was executed on synthetic 1h data (a downtrend followed by a rally, with a bullish crude series). These runs check the logic, not profitability.</p>
+
+<div class="tw"><table><tr><th>TEST</th><th>RESULT</th></tr><tr><td>ONGC fresh bullish cross, Thu 22 Oct 2026, crude BULL, IVP 77</td><td>ENTRY_SIGNAL, phase ENTRY_WINDOW_B, cycle B, options_strategy SELL_ATM_PUT_OR_BULL_PUT_CREDIT_SPREAD; exit plan: scale out and hard exit Mon 2 Nov (OPEC+ 1 Nov)</td></tr><tr><td>IOC on the same bullish chart, crude BULL</td><td>SKIPPED_BY_CRUDE_GATE</td></tr><tr><td>Same signal on 13 Oct (inside the Report Window)</td><td>STANDBY (outside entry window)</td></tr><tr><td>Same signal on Wed 21 Oct</td><td>ENTRY_SIGNAL with size_factor 0.5 (Wednesday rule)</td></tr><tr><td>Stop loss: spot 260, Supertrend 252, premium 9, delta 0.50</td><td>Sold put: 13.00 &nbsp;|&nbsp; Bought call: 5.00 (matches the framework examples)</td></tr><tr><td>Calendar: Tue 27 Oct (Oct expiry) and Tue 24 Nov (Nov expiry, inside Window B)</td><td>entry_allowed False on both</td></tr><tr><td>Exit plan: Cycle A entered 9 Nov, MOMR 11 Nov, IEA 13 Nov</td><td>Scale out and deadline Mon 16 Nov</td></tr><tr><td>check_exit on 2 Nov / 30 Oct for a Cycle B long</td><td>SCALE_OUT 75% with flatten_by_close True / HOLD</td></tr><tr><td>MIS leg, and a current-month contract</td><td>Both rejected by validate_legs</td></tr><tr><td>Synthetic basket with the SELL PE leg rejected</td><td>ABORTED_FLATTENED: filled CE leg reversed, alert raised</td></tr><tr><td>Pair ONGC / BPCL, Z = +2.29, VIX 17 / VIX 24</td><td>SHORT_SPREAD: Sell ONGC / Buy BPCL futures; VIX 24 switches to Bear Call + Bull Put spreads</td></tr><tr><td>Pair signal while a bullish Strategy 1 long exists in ONGC</td><td>BLOCKED (opposite exposure)</td></tr></table></div>
+<h2>11. DETAILED ENGLISH STRATEGY &amp; TACTICAL PLAYBOOK</h2>
+<h3>A. Monthly Oil Catalyst Playbook</h3>
+<p>Public-sector OMCs revise ATF prices on the 1st and OPEC+ usually decides in the first days of the month; OPEC and IEA monthly reports land around the 10th–14th. Cycle B enters between the 21st and 26th when IV tends to be building, holds Next Month contracts in NRML through month-end, and on the first full session after the OPEC+ meeting exits 70%–80% to harvest the post-event IV crush, with the balance flat by that close (latest the 7th). Cycle A enters on the 8th–10th after the early-month catalysts, when IVP is often below 50 and debit structures are favoured, and is flat by the close of the 16th.</p>
+<h3>B. Quarterly Earnings Playbook</h3>
+<p>Earnings create binary gap risk. 7 to 10 days before results the system buys options on rising IVP and exits one day prior. 1 to 2 days before results it sells only defined-risk credit spreads, and only when IVP &gt; 70. Naked option selling is forbidden into results; if a results date falls inside a held trade, synthetic positions are blocked and futures follow Supertrend / calendar exits.</p>
+<h3>C. Weekly Oil Rhythm</h3>
+<p>API inventory estimates arrive Tuesday night; the EIA report lands about 8–9 pm IST on Wednesday, after the Indian close, so NRML positions absorb it as a Thursday opening gap. On Wednesdays the engine halves size on any structure with a short option leg (or the operator converts to spreads). Sunday OPEC+ meetings create the largest scheduled weekend gap.</p>
+<h3>D. Crude-Divergence Pair Trades</h3>
+<p>When the upstream spread against a downstream, aviation or paints name stretches beyond |Z| 2.0 (2.2 for ONGC / BPCL), the system trades the reversion with beta-neutral legs, using spreads instead of naked futures when India VIX &gt; 20. It exits when Z returns inside ±0.5 or after 15 trading days, and stops out if |Z| widens beyond 3.5 because that signals a trend, not a reversion.</p>
+<h2>12. RISK GUIDELINES &amp; OPERATIONAL DIRECTIVES</h2>
+<div class="tw"><table><tr><th>#</th><th>DIRECTIVE</th><th>SPECIFICATION</th></tr><tr><td>1</td><td>No Indicator, No Trade</td><td>Crude and sector fundamentals create the watchlist; RSI + Supertrend (100, 1.65) give 100% of entries; Z-score for pair trades.</td></tr><tr><td>2</td><td>Crude Gate Alignment</td><td>Stock signals that conflict with the Brent / MCX Crude 1h Supertrend regime are skipped.</td></tr><tr><td>3</td><td>Naked Selling Restriction</td><td>Naked ATM selling only in the Cycle B catalyst window and never into results; otherwise credit spreads are mandatory.</td></tr><tr><td>4</td><td>Vega / Gamma Buffer</td><td>5%–10% buffer on option stop distance for binary earnings (engine default 10%).</td></tr><tr><td>5</td><td>Multi-Leg Synchronization</td><td>BUY leg first, then SELL, inside one sync window. Any failed leg triggers auto-flatten of filled legs and an operator alert.</td></tr><tr><td>6</td><td>NRML Order Type Mandate</td><td>MIS is forbidden on every leg. Only next-month contracts. Enforced in validate_legs before any order is sent.</td></tr><tr><td>7</td><td>Overnight Gap Awareness</td><td>Crude trades while NSE is closed. Stops cannot protect opening gaps, so size accordingly and prefer spreads on event nights.</td></tr></table></div>
+
+<h3>Before Going Live</h3>
+<ul><li>Backtest the 1h RSI (14) + Supertrend (100, 1.65) triggers and the Crude Gate on every name, net of costs and slippage.</li><li>Confirm next-month liquidity (OI, bid-ask) and NSE F&amp;O eligibility, lot sizes and expiry dates; refresh the event calendar and holiday list monthly.</li><li>Replace <code>PaperBroker</code> with your Streak / broker REST wrapper and paper-trade the multi-leg sync and leg-failure protocol.</li><li>Calendar windows, the Wednesday rule, the extreme-Z stop and the pair thresholds are design choices that need independent backtesting.</li></ul>
+
+<p class="note">This document is a research framework, not investment advice. Trading derivatives carries substantial risk of loss.</p>
+</section>
+</main>
+<script>
+var docs=[].slice.call(document.querySelectorAll('.doc')),nav=document.getElementById('nav');
+function show(i){docs.forEach(function(d,j){d.classList.toggle('on',i===j)});[].forEach.call(nav.children,function(b,j){b.classList.toggle('on',i===j);b.setAttribute('aria-selected',i===j)});history.replaceState(null,'','#'+(i+1));window.scrollTo(0,0)}
+docs.forEach(function(d,i){var b=document.createElement('button');b.setAttribute('role','tab');b.textContent=(i+1)+'. '+d.dataset.t;b.onclick=function(){show(i)};nav.appendChild(b)});
+var n=parseInt(location.hash.slice(1))||1;show(Math.min(Math.max(n,1),docs.length)-1);
+</script></body></html>
